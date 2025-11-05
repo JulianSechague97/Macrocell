@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Empleado - Macrocell</title>
+  <link rel="icon" href="Imagenes/logo-macrocell.jpg" />
+  <style>
+    :root{
+      --primary:#1e3c72;
+      --accent:#007bff;
+      --success:#28a745;
+      --danger:#dc3545;
+      --card:#ffffff;
+      --muted:#666;
+      --glass: rgba(255,255,255,0.9);
+      --radius:12px;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{background:#f5f7fb;margin:0;color:#222}
+    header{
+      background:var(--card);
+      display:flex;align-items:center;gap:20px;padding:18px 28px;
+      box-shadow: 0 3px 12px rgba(30,60,114,0.08);
+      position:sticky;top:0;z-index:50;
+    }
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo img{width:46px;height:46px;border-radius:8px;object-fit:cover}
+    .logo .title{font-size:20px;font-weight:700;color:var(--primary)}
+    .search{flex:1}
+    .search input{width:100%;padding:10px 14px;border-radius:999px;border:1px solid #eee}
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;font-weight:600}
+    .icons{margin-left:12px}
+    .container{max-width:1200px;margin:32px auto;padding:0 18px}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:24px}
+    .card{
+      background:var(--card);border-radius:var(--radius);padding:18px;
+      box-shadow:0 6px 18px rgba(30,60,114,0.06);
+    }
+    h2{margin:0 0 14px 0;color:var(--primary)}
+    .btn{
+      display:inline-block;padding:10px 14px;border-radius:10px;background:var(--accent);
+      color:white;border:none;cursor:pointer;font-weight:700;
+    }
+    .btn.sec{background:#fff;color:var(--primary);border:1px solid #e6eefc}
+    .btn.danger{background:var(--danger)}
+    .form-row{display:flex;gap:12px}
+    .form-row .col{flex:1}
+    label{display:block;font-weight:700;margin-bottom:6px;color:#333;font-size:13px}
+    input[type="text"], input[type="email"], input[type="date"], textarea, select {
+      width:100%;padding:10px;border-radius:8px;border:1px solid #e6eefc;background:#fbfdff;
+    }
+    textarea{min-height:100px;resize:vertical}
+    .small{font-size:13px;color:var(--muted)}
+    .list-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;border:1px solid #f1f5ff;margin-bottom:10px;}
+    .list-details{display:flex;gap:12px;align-items:center}
+    .badge{background:var(--accent);color:white;padding:6px 10px;border-radius:8px;font-weight:700}
+    .status{padding:6px 10px;border-radius:8px;font-weight:700}
+    .status.pend{background:#ffeeba;color:#856404}
+    .status.rep{background:#c3e6cb;color:#155724}
+    .footer-note{font-size:13px;color:var(--muted);margin-top:10px}
+    /* modal */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+    .modal{width:100%;max-width:760px;background:var(--card);border-radius:12px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .flex{display:flex;gap:12px}
+    .input-inline{display:flex;gap:8px;align-items:center}
+    .muted{color:var(--muted)}
+    /* responsive */
+    @media(max-width:940px){
+      .grid{grid-template-columns:1fr}
+      .modal{max-width:95%}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img src="Imagenes/logo-macrocell.jpg" alt="logo">
+    <div>
+      <div class="title">Macrocell</div>
+      <div class="small muted">Panel de Empleado</div>
+    </div>
+  </div>
+
+  <div class="search">
+    <input id="globalSearch" placeholder="Buscar por cliente, producto o id de servicio..." />
+  </div>
+
+  <nav>
+    <a href="index.html">Tienda</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="carrito.html">Carrito</a>
+    <a href="soporte.html">Soporte</a>
+  </nav>
+
+  <div class="icons">
+    <button class="btn" id="btnOpenLogin">Iniciar sesión</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <!-- LEFT: LISTA Y ACCIONES -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2>Servicios técnicos</h2>
+        <div class="flex">
+          <button class="btn" id="btnNuevoServicio">+ Nuevo servicio</button>
+          <button class="btn sec" id="btnRefrescar">Actualizar</button>
+        </div>
+      </div>
+
+      <div id="listaServicios" style="max-height:560px;overflow:auto">
+        <!-- items se inyectan aquí -->
+      </div>
+
+      <div class="footer-note">
+        Selecciona un servicio para ver detalles, editar o cambiar estado. Usa el botón "Nuevo servicio" para registrar uno nuevo.
+      </div>
+    </div>
+
+    <!-- RIGHT: FORMULARIO / DETALLES -->
+    <div class="card">
+      <h2 id="panelTitulo">Detalles / Registrar</h2>
+
+      <div id="panelContent">
+        <!-- Formulario de servicio -->
+        <form id="formServicio">
+          <div class="form-row">
+            <div class="col">
+              <label for="clienteCedula">Cédula cliente</label>
+              <input type="text" id="clienteCedula" placeholder="Opcional - deja si cliente ya existe">
+            </div>
+            <div class="col">
+              <label for="clienteNombre">Nombre cliente</label>
+              <input type="text" id="clienteNombre" placeholder="Nombre completo">
+            </div>
+          </div>
+
+          <label for="descripcion">Descripción de la falla</label>
+          <textarea id="descripcion" placeholder="Describe la falla o motivo de ingreso"></textarea>
+
+          <div class="form-row" style="margin-top:10px">
+            <div class="col">
+              <label for="fechaIngreso">Fecha ingreso</label>
+              <input type="date" id="fechaIngreso">
+            </div>
+            <div class="col">
+              <label for="fechaEntrega">Fecha entrega (opcional)</label>
+              <input type="date" id="fechaEntrega">
+            </div>
+          </div>
+
+          <div style="margin-top:12px" class="form-row">
+            <div class="col">
+              <label for="estadoServicio">Estado</label>
+              <select id="estadoServicio">
+                <option value="Pendiente">Pendiente</option>
+                <option value="En reparación">En reparación</option>
+                <option value="Entregado">Entregado</option>
+                <option value="Pendiente pago">Pendiente pago</option>
+              </select>
+            </div>
+            <div class="col">
+              <label for="costo">Costo</label>
+              <input type="text" id="costo" placeholder="0.00">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button class="btn" id="btnGuardarServicio" type="submit">Guardar servicio</button>
+            <button class="btn sec" id="btnLimpiar" type="button">Limpiar</button>
+            <button class="btn sec" id="btnEliminar" type="button" style="display:none;background:#fff;color:var(--danger);border:1px solid #fbeaea">Eliminar</button>
+          </div>
+        </form>
+      </div>
+
+      <div style="margin-top:18px" id="detalleServicio" class="muted"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div id="modalLogin" class="modal-back">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Iniciar sesión (Empleado)</h3>
+      <button class="btn sec" id="closeLogin">Cerrar</button>
+    </div>
+
+    <form id="formLogin">
+      <label for="inputCorreo">Correo</label>
+      <input id="inputCorreo" type="email" placeholder="correo@macrocell.com" required />
+      <label for="inputPass">Contraseña</label>
+      <input id="inputPass" type="password" placeholder="********" required />
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button class="btn" type="submit">Entrar</button>
+        <button class="btn sec" type="button" id="logoutBtn" style="display:none">Cerrar sesión</button>
+      </div>
+      <div id="loginMsg" class="small muted" style="margin-top:8px"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ========== CONFIG ========== */
+const API_BASE = "http://localhost:3000"; // cambia si tu servidor corre en otra url/puerto
+
+/* ========== UTILIDADES UI ========== */
+function toast(msg, type="info"){
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = "position:fixed;right:20px;bottom:20px;background:#1e3c72;color:white;padding:10px 14px;border-radius:10px;z-index:2000";
+  if(type==="error") el.style.background="#c82333";
+  if(type==="success") el.style.background="#28a745";
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2000);
+}
+
+/* ========== ESTADO ========== */
+let servicios = []; // cache local
+let seleccionado = null;
+let empleadoLogueado = null;
+
+/* ========== SELECTORES ========== */
+const listaServiciosEl = document.getElementById('listaServicios');
+const formServicio = document.getElementById('formServicio');
+const btnNuevoServicio = document.getElementById('btnNuevoServicio');
+const btnRefrescar = document.getElementById('btnRefrescar');
+const panelTitulo = document.getElementById('panelTitulo');
+const detalleServicio = document.getElementById('detalleServicio');
+const btnEliminar = document.getElementById('btnEliminar');
+const btnLimpiar = document.getElementById('btnLimpiar');
+
+const modalLogin = document.getElementById('modalLogin');
+const btnOpenLogin = document.getElementById('btnOpenLogin');
+const closeLogin = document.getElementById('closeLogin');
+const formLogin = document.getElementById('formLogin');
+const loginMsg = document.getElementById('loginMsg');
+const logoutBtn = document.getElementById('logoutBtn');
+
+/* campos */
+const cedulaEl = document.getElementById('clienteCedula');
+const nombreEl = document.getElementById('clienteNombre');
+const descripcionEl = document.getElementById('descripcion');
+const fechaIngresoEl = document.getElementById('fechaIngreso');
+const fechaEntregaEl = document.getElementById('fechaEntrega');
+const estadoEl = document.getElementById('estadoServicio');
+const costoEl = document.getElementById('costo');
+
+/* ========== FUNCIONES FETCH ========== */
+
+async function listarServicios(){
+  try{
+    const res = await fetch(`${API_BASE}/api/servicios`);
+    if(!res.ok) throw new Error("Error al cargar servicios");
+    servicios = await res.json();
+    renderLista();
+  }catch(err){
+    console.error(err);
+    toast("No se pudo cargar servicios", "error");
+  }
+}
+
+function renderLista(){
+  listaServiciosEl.innerHTML = "";
+  if(!servicios || servicios.length===0){
+    listaServiciosEl.innerHTML = '<div class="small muted">No hay servicios registrados.</div>'; return;
+  }
+  servicios.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `
+      <div class="list-details">
+        <div style="min-width:54px">
+          <div class="badge">#${s.ID_servicio ?? s.ID_servicio}</div>
+        </div>
+        <div>
+          <div style="font-weight:700">${s.Descripcion_falla ? s.Descripcion_falla.slice(0,60) : '(sin descripción)'}</div>
+          <div class="small muted">Cliente: ${s.ID_cliente ?? 'N/A'} • Ingreso: ${s.Fecha_ingreso ?? '-'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="status ${s.Estado_servicio && s.Estado_servicio.toLowerCase().includes('entregado') ? 'rep' : (s.Estado_servicio && s.Estado_servicio.toLowerCase().includes('repar') ? 'rep' : 'pend')}">
+          ${s.Estado_servicio ?? 'Pendiente'}
+        </div>
+        <button class="btn sec" onclick="consultarServicio(${s.ID_servicio})">Ver</button>
+      </div>
+    `;
+    listaServiciosEl.appendChild(item);
+  });
+}
+
+/* consulta individual */
+async function consultarServicio(id){
+  try{
+    const res = await fetch(`${API_BASE}/api/servicios/${id}`);
+    if(!res.ok) throw new Error("No se pudo consultar");
+    const s = await res.json();
+    seleccionado = s;
+    mostrarEnFormulario(s);
+    panelTitulo.textContent = `Servicio #${s.ID_servicio}`;
+    btnEliminar.style.display = 'inline-block';
+  }catch(err){
+    console.error(err);
+    toast("Error al consultar servicio", "error");
+  }
+}
+
+/* crear cliente si es nuevo */
+async function crearClienteSiEsNuevo(cedula, nombre){
+  if(!cedula || !nombre) return null;
+  try{
+    // POST /api/clientes  -> { Cedula, Nombre, Correo?, Telefono?, Direccion? }
+    const payload = { Cedula: cedula, Nombre: nombre };
+    const res = await fetch(`${API_BASE}/api/clientes`, {
+      method:'POST', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const data = await res.json().catch(()=>({})); console.log(data);
+      // si ya existe quizá el backend devuelva error; ignoramos y retornamos null
+      return null;
+    }
+    const created = await res.json();
+    return created.insertId || null;
+  }catch(err){
+    console.warn("no se pudo crear cliente:", err);
+    return null;
+  }
+}
+
+/* guardar nuevo servicio o actualizar */
+formServicio.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // datos del formulario
+  const clienteCedula = cedulaEl.value.trim();
+  const clienteNombre = nombreEl.value.trim();
+  const descripcion = descripcionEl.value.trim();
+  const fechaIngreso = fechaIngresoEl.value || null;
+  const fechaEntrega = fechaEntregaEl.value || null;
+  const estado = estadoEl.value;
+  const costo = costoEl.value || null;
+
+  try{
+    // Si el cliente no existe, intentamos crear (esto requiere que el backend tenga POST /api/clientes)
+    let id_cliente = null;
+    if(clienteCedula && clienteNombre){
+      // llamar endpoint que crea cliente
+      await crearClienteSiEsNuevo(clienteCedula, clienteNombre)
+      // NOTA: en este ejemplo asumimos que el backend guardará el cliente y le asignará un ID; 
+      // si tu endpoint devuelve el id, podrías usarlo aquí para asociar al servicio.
+    }
+
+    // Si seleccionado => actualizar
+    if(seleccionado && seleccionado.ID_servicio){
+      const id = seleccionado.ID_servicio;
+      const payload = {
+        ID_cliente: id_cliente || seleccionado.ID_cliente || null,
+        Descripcion_falla: descripcion,
+        Fecha_ingreso: fechaIngreso,
+        Fecha_entrega: fechaEntrega,
+        Estado_servicio: estado,
+        Costo: costo
+      };
+      const res = await fetch(`${API_BASE}/api/servicios/${id}`, {
+        method:'PUT', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error("Error actualizando");
+      toast("Servicio actualizado", "success");
+    } else {
+      // crear nuevo servicio
+      const payload = {
+        ID_cliente: id_cliente || null,
+        Descripcion_falla: descripcion,
+        Fecha_ingreso: fechaIngreso || new Date().toISOString().slice(0,10),
+        Fecha_entrega: fechaEntrega || null,
+        Estado_servicio: estado,
+        Costo: costo || 0
+      };
+      const res = await fetch(`${API_BASE}/api/servicios`, {
+        method:'POST', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error("Error guardando servicio");
+      toast("Servicio creado", "success");
+    }
+
+    // limpiar y recargar
+    limpiarFormulario();
+    await listarServicios();
+
+  }catch(err){
+    console.error(err);
+    toast("Error guardando servicio", "error");
+  }
+});
+
+/* eliminar */
+btnEliminar.addEventListener('click', async () => {
+  if(!seleccionado || !seleccionado.ID_servicio){ toast("Selecciona un servicio primero", "error"); return; }
+  if(!confirm("¿Eliminar este servicio?")) return;
+  try{
+    const res = await fetch(`${API_BASE}/api/servicios/${seleccionado.ID_servicio}`, { method:'DELETE' });
+    if(!res.ok) throw new Error("no pudo eliminar");
+    toast("Servicio eliminado", "success");
+    limpiarFormulario(); await listarServicios();
+  }catch(err){
+    console.error(err); toast("No se pudo eliminar", "error");
+  }
+});
+
+/* limpiar */
+btnLimpiar.addEventListener('click', limpiarFormulario);
+function limpiarFormulario(){
+  seleccionado = null;
+  panelTitulo.textContent = "Registrar servicio";
+  cedulaEl.value = ""; nombreEl.value = ""; descripcionEl.value = "";
+  fechaIngresoEl.value = ""; fechaEntregaEl.value = ""; estadoEl.value = "Pendiente"; costoEl.value = "";
+  detalleServicio.innerHTML = "";
+  btnEliminar.style.display = 'none';
+}
+
+/* mostrar datos en form */
+function mostrarEnFormulario(s){
+  // s puede venir como array o objeto (depende del backend)
+  const data = Array.isArray(s) ? s[0] : s;
+  if(!data) return;
+  cedulaEl.value = data.Cedula ?? "";
+  nombreEl.value = data.Nombre ?? "";
+  descripcionEl.value = data.Descripcion_falla ?? "";
+  fechaIngresoEl.value = data.Fecha_ingreso ? data.Fecha_ingreso.split('T')[0] : (data.Fecha_ingreso || "");
+  fechaEntregaEl.value = data.Fecha_entrega ? data.Fecha_entrega.split('T')[0] : (data.Fecha_entrega || "");
+  estadoEl.value = data.Estado_servicio || "Pendiente";
+  costoEl.value = data.Costo ?? "";
+  seleccionado = data;
+  // mostrar detalle
+  detalleServicio.innerHTML = `
+    <div><strong>ID cliente:</strong> ${data.ID_cliente ?? 'N/A'}</div>
+    <div><strong>Costo:</strong> ${data.Costo ?? '0.00'}</div>
+    <div style="margin-top:8px"><strong>Detalle:</strong> ${data.Descripcion_falla ?? '-'}</div>
+  `;
+}
+
+/* ================= LOGIN ================= */
+btnOpenLogin.addEventListener('click', ()=> modalLogin.style.display='flex');
+closeLogin.addEventListener('click', ()=> modalLogin.style.display='none');
+
+formLogin.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const correo = document.getElementById('inputCorreo').value.trim();
+  const contrasena = document.getElementById('inputPass').value.trim();
+  try{
+    const res = await fetch(`${API_BASE}/loginEmpleado`, {
+      method:'POST', headers:{"Content-Type":"application/json"}, body: JSON.stringify({ correo, contrasena })
+    });
+    const data = await res.json();
+    if(res.ok && data.success){
+      empleadoLogueado = data.usuario || { correo };
+      loginMsg.textContent = "Sesión iniciada";
+      logoutBtn.style.display = 'inline-block';
+      btnOpenLogin.textContent = (empleadoLogueado.Nombre ? empleadoLogueado.Nombre.split(' ')[0] : 'Empleado');
+      modalLogin.style.display = 'none';
+      toast("Bienvenido " + (empleadoLogueado.Nombre || 'Empleado'), "success");
+    } else {
+      loginMsg.textContent = data.message || "Credenciales incorrectas";
+      toast("Credenciales incorrectas", "error");
+    }
+  }catch(err){
+    console.error(err);
+    loginMsg.textContent = "Error al iniciar sesión";
+    toast("Error al iniciar sesión", "error");
+  }
+});
+
+logoutBtn.addEventListener('click', ()=> {
+  empleadoLogueado = null;
+  btnOpenLogin.textContent = 'Iniciar sesión';
+  logoutBtn.style.display = 'none';
+  toast("Sesión cerrada");
+});
+
+/* ========== EVENTOS UI ========== */
+btnNuevoServicio.addEventListener('click', ()=> {
+  limpiarFormulario();
+  panelTitulo.textContent = "Registrar servicio";
+});
+
+/* buscar global */
+document.getElementById('globalSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  const filtrados = servicios.filter(s => {
+    return (s.Descripcion_falla && s.Descripcion_falla.toLowerCase().includes(q)) ||
+           (String(s.ID_servicio || '').includes(q)) ||
+           (String(s.ID_cliente || '').includes(q));
+  });
+  // renderizar filtrados
+  if(q.trim()===''){ renderLista(); return; }
+  listaServiciosEl.innerHTML = "";
+  filtrados.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<div>${s.ID_servicio} - ${s.Descripcion_falla?.slice(0,40)}</div><div><button class="btn sec" onclick="consultarServicio(${s.ID_servicio})">Ver</button></div>`;
+    listaServiciosEl.appendChild(div);
+  });
+});
+
+/* refrescar lista */
+btnRefrescar.addEventListener('click', listarServicios);
+
+/* carga inicial */
+window.addEventListener('load', async ()=>{
+  await listarServicios();
+});
+</script>
+
+</body>
+</html>

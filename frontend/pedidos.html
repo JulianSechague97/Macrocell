@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedidos - Macrocell</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    header { background-color: #1e3c72; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+    header .logo { font-size: 1.8em; font-weight: bold; }
+    header nav a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
+
+    main { text-align: center; padding: 50px 20px; }
+    .formulario-pedido {
+      background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px; max-width: 600px; margin: 30px auto; text-align: left;
+    }
+    .formulario-pedido label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; color: #333; }
+    .formulario-pedido input, .formulario-pedido select {
+      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;
+    }
+    .formulario-pedido button {
+      display: block; width: 100%; margin-top: 30px; padding: 12px;
+      background: #28a745; color: white; border: none; border-radius: 5px;
+      cursor: pointer; font-size: 1.1em; transition: background 0.3s;
+    }
+    .formulario-pedido button:hover { background: #1e7e34; }
+
+    footer { text-align: center; padding: 15px; background: #1e3c72; color: white; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Macrocell</div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="soporte.html">Soporte</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="carrito.html">Carrito</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Realizar Nuevo Pedido</h2>
+    <section class="formulario-pedido">
+      <p style="text-align:center;color:#666;">Ingresa los datos para registrar tu pedido.</p>
+      <form id="formPedidos">
+        <label for="cliente">Nombre del Cliente:</label>
+        <input type="text" id="cliente" placeholder="Tu nombre completo" required>
+
+        <label for="producto">Producto Solicitado:</label>
+        <select id="producto" required>
+          <option value="" disabled selected>Selecciona un producto</option>
+          <option value="Samsung S24 Ultra">Samsung S24 Ultra</option>
+          <option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option>
+          <option value="Xiaomi Poco X6">Xiaomi Poco X6</option>
+          <option value="Audífonos Bluetooth X">Audífonos Bluetooth X</option>
+        </select>
+
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" id="cantidad" placeholder="1" min="1" required>
+
+        <label for="direccion">Dirección de Envío:</label>
+        <input type="text" id="direccion" placeholder="Dirección completa" required>
+
+        <button type="submit">Registrar Pedido</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>Macrocell © 2025 | 🌐 Español | 🇨🇴 Colombia</p>
+  </footer>
+
+  <script>
+    document.getElementById("formPedidos").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const productoSeleccionado = document.getElementById("producto").value;
+
+      const imagenes = {
+        "Samsung S24 Ultra": "https://cdn.tmobile.com/content/dam/t-mobile/en-p/cell-phones/samsung/galaxy-s24-ultra/gray/samsung-galaxy-s24-ultra-gray-frontimage.jpg",
+        "iPhone 15 Pro Max": "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-max-finish-select-202309-6-7inch-naturaltitanium",
+        "Xiaomi Poco X6": "https://fdn2.gsmarena.com/vv/pics/xiaomi/xiaomi-poco-x6-1.jpg",
+        "Audífonos Bluetooth X": "https://m.media-amazon.com/images/I/61CGHv6kmWL._AC_SL1500_.jpg"
+      };
+
+      const pedido = {
+        cliente: document.getElementById("cliente").value,
+        producto: productoSeleccionado,
+        cantidad: parseInt(document.getElementById("cantidad").value),
+        direccion: document.getElementById("direccion").value,
+        imagen: imagenes[productoSeleccionado] || "https://via.placeholder.com/120"
+      };
+
+      const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+      carrito.push({
+        nombre: pedido.producto,
+        cantidad: pedido.cantidad,
+        precio: 1000,
+        imagen: pedido.imagen
+      });
+
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+      alert("Pedido agregado al carrito correctamente.");
+      window.location.href = "carrito.html";
+    });
+  </script>
+</body>
+</html>
