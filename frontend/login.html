@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión - Macrocell</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      max-width: 400px;
+      width: 100%;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+
+    .login-header h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    .login-header p {
+      opacity: 0.9;
+      font-size: 0.95em;
+    }
+
+    .login-body {
+      padding: 40px 30px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #2a5298;
+      font-size: 1.2em;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 15px 15px 45px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1em;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #2a5298;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(42, 82, 152, 0.4);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .alert {
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .alert-error {
+      background-color: #fee;
+      color: #c33;
+      border-left: 4px solid #c33;
+    }
+
+    .alert-success {
+      background-color: #efe;
+      color: #3c3;
+      border-left: 4px solid #3c3;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 25px 0;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .divider span {
+      background: white;
+      padding: 0 15px;
+      position: relative;
+      color: #999;
+      font-size: 0.85em;
+    }
+
+    .help-text {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+      font-size: 0.85em;
+    }
+
+    .help-text a {
+      color: #2a5298;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2a5298;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #999;
+      font-size: 1.2em;
+      user-select: none;
+    }
+
+    .password-toggle:hover {
+      color: #2a5298;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>Macrocell</h1>
+      <p>Inicia sesión en tu cuenta</p>
+    </div>
+
+    <div class="login-body">
+      <div id="alert" class="alert"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="usuario">Usuario o Correo</label>
+          <div class="input-wrapper">
+            <span class="input-icon">●</span>
+            <input 
+              type="text" 
+              id="usuario" 
+              placeholder="Ingresa tu usuario o correo"
+              required
+              autocomplete="username"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div class="input-wrapper">
+            <span class="input-icon">■</span>
+            <input 
+              type="password" 
+              id="password" 
+              placeholder="Ingresa tu contraseña"
+              required
+              autocomplete="current-password"
+            >
+            <span class="password-toggle" onclick="togglePassword()">○</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+          Iniciar Sesión
+        </button>
+
+        <div class="loading" id="loading">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 10px; color: #2a5298; font-size: 0.9em;">Verificando credenciales...</p>
+        </div>
+      </form>
+
+      <div class="divider">
+        <span>Acceso seguro</span>
+      </div>
+
+      <div class="help-text">
+        <p>¿Problemas para iniciar sesión?</p>
+        <a href="index.html">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = `${API_URL}`;
+
+    // Toggle mostrar/ocultar contraseña
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggle = document.querySelector('.password-toggle');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggle.textContent = '●';
+      } else {
+        passwordInput.type = 'password';
+        toggle.textContent = '○';
+      }
+    }
+
+    // Mostrar alerta
+    function showAlert(message, type = 'error') {
+      const alertDiv = document.getElementById('alert');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.textContent = message;
+      alertDiv.style.display = 'block';
+
+      if (type === 'success') {
+        setTimeout(() => {
+          alertDiv.style.display = 'none';
+        }, 2000);
+      }
+    }
+
+    // Mostrar/ocultar loading
+    function toggleLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+      document.querySelector('.btn-login').style.display = show ? 'none' : 'block';
+    }
+
+    // Login unificado
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const usuario = document.getElementById('usuario').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!usuario || !password) {
+        showAlert('Por favor completa todos los campos', 'error');
+        return;
+      }
+
+      toggleLoading(true);
+
+      try {
+        // Primero intentar login como empleado (por correo)
+        if (usuario.includes('@')) {
+          const resEmpleado = await fetch(`${API_URL}/loginEmpleado`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo: usuario, contrasena: password })
+          });
+
+          const dataEmpleado = await resEmpleado.json();
+
+          if (dataEmpleado.success) {
+            showAlert('Inicio de sesión exitoso como empleado', 'success');
+            localStorage.setItem('usuarioActivo', JSON.stringify(dataEmpleado.usuario));
+            localStorage.setItem('tipoUsuario', 'empleado');
+            
+            setTimeout(() => {
+              window.location.href = 'home.html';
+            }, 1000);
+            return;
+          }
+        }
+
+        // Si no es correo o falló, intentar como administrador
+        const resAdmin = await fetch(`${API_URL}/loginAdmin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario: usuario, contrasena: password })
+        });
+
+        const dataAdmin = await resAdmin.json();
+
+        if (dataAdmin.success) {
+          showAlert('Inicio de sesión exitoso como administrador', 'success');
+          localStorage.setItem('usuarioActivo', usuario);
+          localStorage.setItem('tipoUsuario', 'admin');
+          
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 1000);
+          return;
+        }
+
+        // Si ambos fallan
+        showAlert('Usuario o contraseña incorrectos', 'error');
+        toggleLoading(false);
+
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('Error de conexión con el servidor', 'error');
+        toggleLoading(false);
+      }
+    });
+
+    // Animación al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('usuario').focus();
+    });
+
+    // Enter en el campo usuario pasa al campo contraseña
+    document.getElementById('usuario').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('password').focus();
+      }
+    });
+  </script>
+  <script src="config.js"></script>
+</body>
+</html>

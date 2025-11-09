@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte - Macrocell</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <div class="logo">Macrocell</div>
+    <input type="text" placeholder="Búsqueda..." class="search-bar">
+    <nav>
+        <a href="index.html">Inicio</a>
+        <a href="soporte.html">Soporte</a>
+        <a href="nosotros.html">Sobre Nosotros</a>
+        
+    </nav>
+    <div class="icons">
+        <a href="pedidos.html" class="icon">Pedidos</a>
+        <a href="login.html" class="icon">👤</a>
+        <a href="carrito.html" class="icon">🛒 <span id="carrito-count">0</span></a>
+    </div>
+</header>
+
+    <main>
+        <h2>Centro de Soporte</h2>
+        <section class="soporte">
+            <form>
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" placeholder="Tu nombre completo">
+
+                <label for="email">Correo electrónico:</label>
+                <input type="email" id="email" placeholder="ejemplo@correo.com">
+
+                <label for="mensaje">Mensaje:</label>
+                <textarea id="mensaje" placeholder="Describe tu problema o consulta..."></textarea>
+
+                <button class="btn">Enviar</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>Macrocell © 2025 | 🌐 Español | 🇨🇴 Colombia</p>
+    </footer>
+    <script src="../login.js"></script>
+
+    <script>
+document.querySelector("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const nombre = document.getElementById("nombre").value;
+  const correo = document.getElementById("email").value;
+  const mensaje = document.getElementById("mensaje").value;
+
+  const res = await fetch(`${API_URL}/api/soporte`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre, correo, mensaje })
+  });
+
+  const data = await res.json();
+  alert(data.mensaje);
+  e.target.reset();
+});
+</script>
+<script src="config.js"></script>
+</body>
+</html>

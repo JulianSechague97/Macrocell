@@ -1,0 +1,303 @@
+/* ===================================
+   ESTILOS GENERALES
+   =================================== */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+/* ===================================
+   HEADER CON LOGO
+   =================================== */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 12px 40px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Logo clickeable con imagen */
+.logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.logo-link:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.logo-imagen {
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+}
+
+.logo {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #2a2a2a;
+    transition: color 0.3s ease;
+    margin: 0;
+}
+
+.logo-link:hover .logo {
+    color: #007bff;
+}
+
+/* Barra de búsqueda */
+.search-bar {
+    width: 25%;
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Navegación */
+nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #007bff;
+}
+
+/* Iconos del header */
+.icons {
+    display: flex;
+    align-items: center;
+}
+
+.icons .icon {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.icons .icon:hover {
+    color: #007bff;
+}
+
+/* Contador del carrito */
+#carrito-count {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    font-weight: bold;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+}
+
+/* ===================================
+   BOTONES
+   =================================== */
+.btn-agregar {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.2);
+}
+
+.btn-agregar:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+}
+
+.btn-agregar:active {
+    transform: scale(0.97);
+}
+
+/* ===================================
+   CONTENIDO PRINCIPAL
+   =================================== */
+main {
+    padding: 30px 50px;
+}
+
+h2 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+/* ===================================
+   PRODUCTOS
+   =================================== */
+.productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+}
+
+.producto {
+    background-color: white;
+    border-radius: 10px;
+    text-align: center;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.producto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.producto img {
+    width: 100%;
+    height: auto;
+    max-height: 150px;
+    object-fit: contain;
+}
+
+/* ===================================
+   PROMOCIONES
+   =================================== */
+.promociones {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.promo-card {
+    background: #eaf3ff;
+    border-radius: 10px;
+    padding: 20px;
+    flex: 1;
+    min-width: 250px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.promo-card:hover {
+    transform: translateY(-5px);
+}
+
+/* ===================================
+   FOOTER
+   =================================== */
+footer {
+    text-align: center;
+    background-color: #fff;
+    padding: 15px;
+    margin-top: 40px;
+    border-top: 1px solid #ddd;
+}
+
+/* ===================================
+   LOGIN
+   =================================== */
+.login-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    width: 300px;
+    text-align: center;
+}
+
+.login-container h1 {
+    margin-bottom: 25px;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.login-container button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+    background-color: #0056b3;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .icons {
+        width: 100%;
+        justify-content: center;
+    }
+
+    main {
+        padding: 20px;
+    }
+
+    .productos {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+}

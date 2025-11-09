@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macrocell - Tienda de Tecnología</title>
+    
+    <!-- FAVICON - Logo en la pestaña del navegador -->
+    <link rel="icon" type="image/jpg" href="Imagenes/logo-macrocell.jpg">
+    
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .productos, .servicios-grid, .mas-vendidos, .contacto-numeros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .servicio-card, .mas-vendido-card, .numero-card {
+            width: 220px;
+            text-align: center;
+        }
+        
+        .servicio-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        .servicio-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transition: transform 0.5s ease;
+        }
+        .servicio-card:hover::before {
+            transform: translate(-25%, -25%);
+        }
+        .servicio-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+        .servicio-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 12px;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        .servicio-card p {
+            font-size: 0.95em;
+            line-height: 1.6;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        .servicio-card:nth-child(1) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .servicio-card:nth-child(2) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .servicio-card:nth-child(3) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .servicio-card:nth-child(4) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .servicio-card:nth-child(5) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .servicio-card:nth-child(6) { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        
+        .mas-vendido-card {
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .mas-vendido-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .mas-vendido-ranking {
+            background: #007bff;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .mas-vendido-ranking.top-1 { background: #FFD700; color: #000; }
+        .mas-vendido-ranking.top-2 { background: #C0C0C0; color: #000; }
+        .mas-vendido-ranking.top-3 { background: #CD7F32; color: #fff; }
+        .mas-vendido-nombre {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 10px 0;
+            color: #333;
+        }
+        .mas-vendido-precio {
+            color: #28a745;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        .mas-vendido-stock {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .mas-vendido-vendidos {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        .loading-text {
+            text-align: center;
+            color: #007bff;
+            font-size: 1.2em;
+            padding: 20px;
+        }
+        .error-text {
+            text-align: center;
+            color: #dc3545;
+            padding: 20px;
+            background: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<!-- ============================================
+     HEADER CON LOGO
+     ============================================ -->
+<header>
+    <a href="index.html" class="logo-link">
+      <img src="Imagenes/logo-macrocell.jpg" alt="Macrocell Logo" class="logo-imagen">
+        <div class="logo">Macrocell</div>
+    </a>
+    <input type="text" placeholder="Búsqueda..." class="search-bar">
+    <nav>
+        <a href="soporte.html">Soporte</a>
+        <a href="#" id="btnTopVendidos">Lo más vendido</a>
+        <a href="nosotros.html">Sobre Nosotros</a>
+        <a href="#" id="btnContactanos">Contáctanos</a>
+    </nav>
+    <div class="icons">
+        <a href="pedidos.html" class="icon">Pedidos</a>
+        <a href="login.html" class="icon">👤</a>
+        <a href="carrito.html" class="icon">🛒 <span id="carrito-count">0</span></a>
+    </div>
+</header>
+
+<!-- ============================================
+     CONTENIDO PRINCIPAL
+     ============================================ -->
+<main>
+    <!-- Navegación de secciones -->
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-bottom: 15px;">
+        <h2 id="btnCelulares" style="margin: 0; font-family: inherit; font-size: inherit; color: inherit; border-bottom: 2px solid #007bff; padding-bottom: 5px;">
+            Productos Disponibles
+        </h2>
+        <h2 id="btnServicios" style="margin: 0; font-family: inherit; font-size: inherit; color: inherit; border-bottom: 2px solid transparent; padding-bottom: 5px;">
+            Servicios de Reparación y Mantenimiento
+        </h2>
+    </div>
+
+    <!-- Sección de productos -->
+    <section id="seccionCelulares" class="productos">
+        <div class="producto">
+            <img src="Imagenes/Router WiFi AX3000.png" alt="Router WiFi AX3000">
+            <p>Router WiFi AX3000<br><strong>$280.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Switch 8 Puertos.webp" alt="Switch 8 Puertos">
+            <p>Switch 8 Puertos<br><strong>$180.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Cable UTP Cat6.jpg" alt="Cable UTP Cat6">
+            <p>Cable UTP Cat6<br><strong>$35.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Antena Direccional.png" alt="Antena Direccional">
+            <p>Antena Direccional<br><strong>$350.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Fuente 12V 5A.webp" alt="Fuente 12V 5A">
+            <p>Fuente 12V 5A<br><strong>$90.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+    </section>
+
+    <!-- Sección de servicios técnicos -->
+    <section id="seccionServicios" style="display: none; margin-top: 20px;">
+        <div class="servicios-grid">
+            <div class="servicio-card">
+                <h4>Cambio de Pantalla</h4>
+                <p>Reemplazo por pantalla original.</p>
+            </div>
+            <div class="servicio-card">
+                <h4>Cambio de Batería</h4>
+                <p>Baterías nuevas para mayor duración.</p>
+            </div>
+            <div class="servicio-card">
+                <h4>Reparación de Software</h4>
+                <p>Actualización y eliminación de virus.</p>
+            </div>
+            <div class="servicio-card">
+                <h4>Limpieza Interna</h4>
+                <p>Eliminamos polvo y residuos dentro del dispositivo.</p>
+            </div>
+            <div class="servicio-card">
+                <h4>Actualización del Sistema</h4>
+                <p>Mantén tu celular con las últimas versiones de software.</p>
+            </div>
+            <div class="servicio-card">
+                <h4>Optimización del Rendimiento</h4>
+                <p>Mejoramos la velocidad y eficiencia del dispositivo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Lo más vendido -->
+    <section id="seccionTopVendidos" class="mas-vendidos" style="display: none; margin-top: 20px;">
+        <div id="loadingVendidos" class="loading-text">Cargando productos más vendidos...</div>
+        <div id="errorVendidos" class="error-text" style="display: none;"></div>
+    </section>
+
+    <!-- Sección Contáctanos -->
+    <section id="seccionContactanos" class="contacto-numeros" style="display: none; margin-top: 20px;">
+        <div class="numero-card"><p>📞 350 6332077</p></div>
+        <div class="numero-card"><p>📞 304 4066680</p></div>
+    </section>
+
+    <!-- Promociones -->
+    <h2>Promociones</h2>
+    <section class="promociones">
+        <div class="promo-card">
+            <h3>Descuento ROUTERS</h3>
+            <p>20% de descuento en modelos seleccionados</p>
+        </div>
+        <div class="promo-card">
+            <h3>Tester</h3>
+            <p>Compra uno y lleva accesorios gratis</p>
+        </div>
+    </section>
+
+    <!-- Artículos Tecnológicos -->
+    <h2>Artículos Tecnológicos</h2>
+    <section class="productos">
+        <div class="producto">
+            <img src="Imagenes/Módem LTE.webp" alt="Módem LTE">
+            <p>Módem LTE<br><strong>$700.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Router WiFi N300.webp" alt="Router WiFi N300">
+            <p>Router WiFi N300<br><strong>$180.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Cámara IP.webp" alt="Cámara IP">
+            <p>Cámara IP<br><strong>$320.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Conector RJ45.jpg" alt="Conector RJ45">
+            <p>Conector RJ45<br><strong>$150.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto">
+            <img src="Imagenes/Tester de Red.jpg" alt="Tester de Red">
+            <p>Tester de Red<br><strong>$130.00</strong></p>
+            <button class="btn-agregar" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+    </section>
+</main>
+
+<!-- ============================================
+     FOOTER
+     ============================================ -->
+<footer>
+    <p>Macrocell © 2025 | 🌐 Español | 🇨🇴 Colombia</p>
+</footer>
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
+<script>
+// ACTUALIZAR CONTADOR DEL CARRITO
+function actualizarContadorCarrito() {
+  const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  const totalUnidades = carrito.reduce((acc, p) => acc + p.cantidad, 0);
+  const contador = document.getElementById("carrito-count");
+  if (contador) {
+    contador.textContent = totalUnidades;
+  }
+}
+
+// CARGAR CONTADOR AL INICIAR LA PÁGINA
+window.addEventListener('DOMContentLoaded', () => {
+  actualizarContadorCarrito();
+});
+
+// AGREGAR AL CARRITO
+async function agregarAlCarrito(boton) {
+  const productoEl = boton.closest(".producto");
+  const nombre = productoEl.querySelector("p").childNodes[0].textContent.trim();
+  const precioTexto = productoEl.querySelector("strong").textContent.replace("$", "").replace(",", "").trim();
+  const precio = parseFloat(precioTexto);
+  const imagen = productoEl.querySelector("img").src;
+
+  // Guarda en localStorage 
+  let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  const existente = carrito.find(p => p.nombre === nombre);
+  if (existente) {
+    existente.cantidad += 1;
+  } else {
+    carrito.push({ nombre, precio, imagen, cantidad: 1 });
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  actualizarContadorCarrito();
+
+  // ---  Enviar al backend (MySQL) ---
+  try {
+  // Obtener productos desde la base de datos
+  const productoResponse = await fetch(`${API_URL}/api/productos`);
+  const productos = await productoResponse.json();
+
+  console.log("Productos obtenidos del backend:", productos);
+
+  // Validar que existan productos
+  if (!productos || productos.length === 0) {
+    console.error("No se recibieron productos desde el backend");
+    return;
+  }
+
+  // Buscar coincidencia de nombre (con seguridad)
+  const normalizar = (texto) => texto
+  ? texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+  : "";
+
+const nombreNormalizado = normalizar(nombre);
+
+const productoEncontrado = productos.find(p => {
+  const nombreBD = normalizar(p.Nombre);
+  return nombreBD.includes(nombreNormalizado) || nombreNormalizado.includes(nombreBD);
+});
+
+  if (!productoEncontrado) {
+    console.warn("No se encontró el producto en la base de datos:", nombre);
+    return;
+  }
+
+  // Enviar producto al carrito en MySQL
+  const response = await fetch(`${API_URL}/api/carrito`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id_cliente: 1, 
+      id_producto: productoEncontrado.ID_producto,
+      cantidad: 1
+    })
+  });
+
+  const data = await response.json();
+  console.log("Respuesta del backend:", data);
+
+} catch (error) {
+  console.error("Error al enviar al backend:", error);
+}
+
+  // --- Mostrar mensaje visual ---
+  const mensaje = document.createElement("div");
+  mensaje.textContent = "✅ Producto agregado al carrito";
+  mensaje.style.cssText =
+    "position:fixed;bottom:30px;right:30px;background:#28a745;color:white;padding:12px 18px;border-radius:10px;font-size:16px;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:9999;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;transform:translateY(20px)";
+  document.body.appendChild(mensaje);
+  setTimeout(() => {
+    mensaje.style.opacity = "1";
+    mensaje.style.transform = "translateY(0)";
+  }, 50);
+  setTimeout(() => {
+    mensaje.style.opacity = "0";
+    mensaje.style.transform = "translateY(20px)";
+    setTimeout(() => mensaje.remove(), 300);
+  }, 1500);
+}
+
+
+// SISTEMA DE NAVEGACIÓN ENTRE SECCIONES
+const btnServicios = document.getElementById('btnServicios');
+const seccionServicios = document.getElementById('seccionServicios');
+const btnCelulares = document.getElementById('btnCelulares');
+const seccionCelulares = document.getElementById('seccionCelulares');
+const btnTopVendidos = document.getElementById('btnTopVendidos');
+const seccionTopVendidos = document.getElementById('seccionTopVendidos');
+const btnContactanos = document.getElementById('btnContactanos');
+const seccionContactanos = document.getElementById('seccionContactanos');
+
+let seccionActiva = 'celulares';
+let productosVendidosCargados = false;
+
+// CARGAR PRODUCTOS MÁS VENDIDOS
+async function cargarProductosVendidos() {
+    const loadingDiv = document.getElementById('loadingVendidos');
+    const errorDiv = document.getElementById('errorVendidos');
+    const contenedor = document.getElementById('seccionTopVendidos');
+
+    try {
+        const response = await fetch('`${API_URL}/top5`');
+        const data = await response.json();
+        loadingDiv.style.display = 'none';
+
+        if (data.length > 0) {
+            loadingDiv.remove();
+            errorDiv.style.display = 'none';
+
+            data.forEach((producto, index) => {
+                const ranking = index + 1;
+                const rankingClass = ranking <= 3 ? `top-${ranking}` : '';
+                const card = document.createElement('div');
+                card.className = 'mas-vendido-card';
+                card.innerHTML = `
+                    <div class="mas-vendido-ranking ${rankingClass}">#${ranking}</div>
+                    <div class="mas-vendido-nombre">${producto.Nombre}</div>
+                    <div class="mas-vendido-precio">$${parseFloat(producto.Precio_venta || producto.Precio).toLocaleString('es-CO')}</div>
+                    <div class="mas-vendido-stock">Stock: ${producto.Stock_actual || producto.Stock} unidades</div>
+                    <div class="mas-vendido-vendidos">🔥 ${producto.total_vendido} vendidos</div>
+                `;
+                contenedor.appendChild(card);
+            });
+            productosVendidosCargados = true;
+        } else {
+            errorDiv.textContent = 'No hay productos vendidos registrados en la base de datos.';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        errorDiv.textContent = 'Error al conectar con la base de datos.';
+        errorDiv.style.display = 'block';
+        console.error('Error:', error);
+    }
+}
+
+// MOSTRAR SECCIONES
+function mostrarSeccion(seccion) {
+    seccionCelulares.style.display = 'none';
+    seccionServicios.style.display = 'none';
+    seccionTopVendidos.style.display = 'none';
+    seccionContactanos.style.display = 'none';
+
+    btnCelulares.style.borderBottom = '2px solid transparent';
+    btnServicios.style.borderBottom = '2px solid transparent';
+
+    if(seccion === 'celulares') {
+        seccionCelulares.style.display = 'flex';
+        btnCelulares.style.borderBottom = '2px solid #007bff';
+    } else if(seccion === 'servicios') {
+        seccionServicios.style.display = 'flex';
+        btnServicios.style.borderBottom = '2px solid #007bff';
+    } else if(seccion === 'topVendidos') {
+        seccionTopVendidos.style.display = 'flex';
+        if (!productosVendidosCargados) {
+            cargarProductosVendidos();
+        }
+    } else if(seccion === 'contactanos') {
+        seccionContactanos.style.display = 'flex';
+    }
+    seccionActiva = seccion;
+}
+
+// EVENT LISTENERS
+btnCelulares.addEventListener('click', () => mostrarSeccion('celulares'));
+btnServicios.addEventListener('click', () => mostrarSeccion(seccionActiva === 'servicios' ? 'celulares' : 'servicios'));
+btnTopVendidos.addEventListener('click', () => mostrarSeccion(seccionActiva === 'topVendidos' ? 'celulares' : 'topVendidos'));
+btnContactanos.addEventListener('click', () => mostrarSeccion(seccionActiva === 'contactanos' ? 'celulares' : 'contactanos'));
+</script>
+<script src="config.js"></script>
+</body>
+</html>

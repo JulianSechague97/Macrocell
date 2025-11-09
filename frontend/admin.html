@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador | Macrocell</title>
+  <style>
+    :root {
+      --color-primario: #3498db;
+      --color-secundario: #2ecc71;
+      --color-fondo: #ecf0f1;
+      --color-texto: #2c3e50;
+      --color-alerta: #e74c3c;
+      --color-warning: #f39c12;
+      --color-morado: #9b59b6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--color-fondo);
+      line-height: 1.6;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--color-primario), #2980b9);
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 1.8em;
+    }
+
+    .header .cerrar-sesion {
+      background-color: var(--color-alerta);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .header .cerrar-sesion:hover {
+      background-color: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    /* TABS */
+    .tabs {
+      background: white;
+      display: flex;
+      justify-content: center;
+      border-bottom: 3px solid var(--color-primario);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      background: transparent;
+      border: none;
+      padding: 15px 25px;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: var(--color-texto);
+      font-weight: 500;
+    }
+
+    .tab-button:hover {
+      background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .tab-button.active {
+      background-color: var(--color-primario);
+      color: white;
+    }
+
+    /* CONTENIDO */
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h3 {
+      color: var(--color-primario);
+      margin-bottom: 25px;
+      font-size: 1.8em;
+      border-bottom: 3px solid var(--color-primario);
+      padding-bottom: 10px;
+    }
+
+    /* FORMULARIOS */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f9fbfd;
+      border-radius: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--color-texto);
+    }
+
+    input, select, textarea {
+      padding: 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: all 0.3s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--color-primario);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background-color: var(--color-secundario);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #27ae60;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-edit {
+      background-color: var(--color-warning);
+      color: white;
+      padding: 8px 12px;
+      font-size: 0.9em;
+    }
+
+    .btn-edit:hover {
+      background-color: #e67e22;
+    }
+
+    .btn-delete {
+      background-color: var(--color-alerta);
+      color: white;
+      padding: 8px 12px;
+      font-size: 0.9em;
+    }
+
+    .btn-delete:hover {
+      background-color: #c0392b;
+    }
+
+    /* BADGE DE ROL */
+    .badge-rol {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-admin {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+    }
+
+    .badge-empleado {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+    }
+
+    /* TABLAS */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: center;
+      padding: 15px;
+      border-bottom: 1px solid #f4f6f8;
+    }
+
+    th {
+      background-color: var(--color-primario);
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.9em;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f9fbfd;
+    }
+
+    tbody tr:hover {
+      background-color: #f0f8ff;
+    }
+
+    .acciones {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #95a5a6;
+      font-size: 1.2em;
+    }
+
+    /* REPORTES */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--color-primario), #2980b9);
+      color: white;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h4 {
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .stat-card .stat-value {
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    /* INFO CARD */
+    .info-card {
+      background: linear-gradient(135deg, var(--color-morado), #8e44ad);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info-card h4 {
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+
+    .info-card ul {
+      margin-left: 20px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+      .tabs {
+        overflow-x: auto;
+      }
+      
+      .tab-button {
+        padding: 12px 20px;
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>👑 Panel del Administrador - Macrocell</h1>
+    <a href="login.html" class="cerrar-sesion">← Cerrar Sesión</a>
+  </div>
+
+ <div class="tabs">
+  <button class="tab-button active" onclick="cambiarTab('productos', this)">📦 Productos</button>
+  <button class="tab-button" onclick="cambiarTab('proveedores', this)">🏭 Proveedores</button>
+  <button class="tab-button" onclick="cambiarTab('clientes', this)">👥 Clientes</button>
+  <button class="tab-button" onclick="cambiarTab('ventas', this)">💰 Ventas</button>
+  <button class="tab-button" onclick="cambiarTab('servicios', this)">🔧 Servicio Técnico</button>
+  <button class="tab-button" onclick="cambiarTab('empleados', this)">👔 Empleados</button>
+  <button class="tab-button" onclick="cambiarTab('reportes', this)">📊 Reportes</button>
+</div>
+
+
+  <div class="container">
+    <!-- PRODUCTOS TAB -->
+    <div id="productos-tab" class="tab-content active">
+      <h3>Gestión de Productos</h3>
+      
+      <form id="formProducto" class="form-grid">
+        <input type="hidden" id="prod_id">
+        <div class="form-group">
+          <label>Nombre del Producto *</label>
+          <input type="text" id="prod_nombre" required>
+        </div>
+        <div class="form-group">
+          <label>Precio de Venta *</label>
+          <input type="number" id="prod_precio" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Proveedor *</label>
+          <select id="prod_proveedor" required></select>
+        </div>
+        <div class="form-group">
+          <label>Stock *</label>
+          <input type="number" id="prod_stock" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Guardar Producto</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Proveedor</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaProductos"></tbody>
+      </table>
+    </div>
+
+    <!-- PROVEEDORES TAB -->
+    <div id="proveedores-tab" class="tab-content">
+      <h3>Gestión de Proveedores</h3>
+      
+      <form id="formProveedor" class="form-grid">
+        <input type="hidden" id="prov_id">
+        <div class="form-group">
+          <label>NIT *</label>
+          <input type="text" id="prov_nit" required>
+        </div>
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="prov_nombre" required>
+        </div>
+        <div class="form-group">
+          <label>Correo *</label>
+          <input type="email" id="prov_correo" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="text" id="prov_telefono" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label>Dirección</label>
+          <input type="text" id="prov_direccion">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Guardar Proveedor</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>NIT</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaProveedores"></tbody>
+      </table>
+    </div>
+
+    <!-- CLIENTES TAB -->
+    <div id="clientes-tab" class="tab-content">
+      <h3>Gestión de Clientes</h3>
+      
+      <form id="formCliente" class="form-grid">
+        <input type="hidden" id="cli_id">
+        <div class="form-group">
+          <label>Cédula</label>
+          <input type="text" id="cli_cedula">
+        </div>
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="cli_nombre" required>
+        </div>
+        <div class="form-group">
+          <label>Correo</label>
+          <input type="email" id="cli_correo">
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="text" id="cli_telefono" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label>Dirección</label>
+          <input type="text" id="cli_direccion">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Guardar Cliente</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaClientes"></tbody>
+      </table>
+    </div>
+
+    <!-- VENTAS TAB -->
+    <div id="ventas-tab" class="tab-content">
+      <h3>Gestión de Ventas</h3>
+      
+      <form id="formVenta" class="form-grid">
+        <div class="form-group">
+          <label>Empleado *</label>
+          <select id="venta_empleado" required></select>
+        </div>
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="venta_cliente" required></select>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label>Productos</label>
+          <div id="productos-venta"></div>
+          <button type="button" onclick="agregarProductoVenta()" class="btn-primary" style="margin-top: 10px;">+ Agregar Producto</button>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Registrar Venta</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Empleado</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaVentas"></tbody>
+      </table>
+    </div>
+
+    <!-- SERVICIO TÉCNICO TAB -->
+    <div id="servicios-tab" class="tab-content">
+      <h3>Gestión de Servicio Técnico</h3>
+      
+      <form id="formServicio" class="form-grid">
+        <input type="hidden" id="serv_id">
+        <div class="form-group">
+          <label>Empleado *</label>
+          <select id="serv_empleado" required></select>
+        </div>
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="serv_cliente" required></select>
+        </div>
+        <div class="form-group">
+          <label>Fecha de Entrega *</label>
+          <input type="date" id="serv_fecha_entrega" required>
+        </div>
+        <div class="form-group">
+          <label>Estado *</label>
+          <select id="serv_estado" required>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En reparación">En reparación</option>
+            <option value="Entregado">Entregado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Costo *</label>
+          <input type="number" id="serv_costo" step="0.01" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label>Descripción de la Falla *</label>
+          <textarea id="serv_descripcion" required></textarea>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Guardar Servicio</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Falla</th>
+            <th>Ingreso</th>
+            <th>Entrega</th>
+            <th>Estado</th>
+            <th>Costo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaServicios"></tbody>
+      </table>
+    </div>
+
+    <!-- EMPLEADOS TAB (NUEVO) -->
+    <div id="empleados-tab" class="tab-content">
+      <h3>👔 Gestión de Empleados</h3>
+
+      <div class="info-card">
+        <h4>🔐 Sistema de Roles</h4>
+        <ul>
+          <li><strong>Admin:</strong> Acceso total al sistema</li>
+          <li><strong>Empleado:</strong> Solo puede gestionar servicios técnicos</li>
+        </ul>
+        <p style="margin-top: 10px; font-size: 0.9em;">Los triggers de la base de datos garantizan que los empleados no puedan modificar productos, proveedores ni ventas.</p>
+      </div>
+      
+      <form id="formEmpleado" class="form-grid">
+        <input type="hidden" id="emp_id">
+        <div class="form-group">
+          <label>Cédula *</label>
+          <input type="text" id="emp_cedula" required>
+        </div>
+        <div class="form-group">
+          <label>Nombre Completo *</label>
+          <input type="text" id="emp_nombre" required>
+        </div>
+        <div class="form-group">
+          <label>Correo *</label>
+          <input type="email" id="emp_correo" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input type="text" id="emp_telefono" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input type="password" id="emp_password" placeholder="Mínimo 6 caracteres">
+          <small style="color: #666; font-size: 0.85em;">Dejar vacío para mantener la actual (solo en edición)</small>
+        </div>
+        <div class="form-group">
+          <label>Rol *</label>
+          <select id="emp_rol" required>
+            <option value="empleado">👤 Empleado</option>
+            <option value="admin">👑 Administrador</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <button type="submit" class="btn-primary">💾 Guardar Empleado</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaEmpleados"></tbody>
+      </table>
+    </div>
+
+    <!-- REPORTES TAB -->
+    <div id="reportes-tab" class="tab-content">
+      <h3>📊 Reportes y Estadísticas</h3>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h4>Total Productos</h4>
+          <div class="stat-value" id="stat-productos">0</div>
+        </div>
+        <div class="stat-card">
+          <h4>Total Clientes</h4>
+          <div class="stat-value" id="stat-clientes">0</div>
+        </div>
+        <div class="stat-card">
+          <h4>Ventas del Mes</h4>
+          <div class="stat-value" id="stat-ventas">0</div>
+        </div>
+        <div class="stat-card">
+          <h4>Servicios Activos</h4>
+          <div class="stat-value" id="stat-servicios">0</div>
+        </div>
+      </div>
+
+      <h4 style="margin-top: 30px;">Productos Más Vendidos</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad Vendida</th>
+            <th>Ingresos Generados</th>
+          </tr>
+        </thead>
+        <tbody id="tablaReporteProductos"></tbody>
+      </table>
+    </div>
+  </div>
+<script>
+  const API_URL = `${API_URL}/api`;
+  let productosDisponibles = [];
+
+  // FUNCION DE TABS
+  function cambiarTab(tabName, boton) {
+    // Ocultar todos los tabs
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    
+    // Quitar clase active de todos los botones
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    
+    // Mostrar el tab seleccionado
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    
+    // Marcar el botón seleccionado como activo
+    boton.classList.add('active');
+
+    // Cargar datos específicos si aplica
+    if (tabName === 'reportes') cargarReportes();
+    if (tabName === 'empleados') cargarEmpleadosAdmin();
+  }
+
+  // INICIALIZAR DATOS AL CARGAR LA PÁGINA
+  window.addEventListener("DOMContentLoaded", () => {
+    cargarProductos();
+    cargarProveedores();
+    cargarClientes();
+    cargarVentas();
+    cargarServicios();
+    cargarEmpleadosParaSelects();
+    cargarProductosParaVenta();
+  });
+
+  // ====================== PRODUCTOS ======================
+  async function cargarProductos() {
+    try {
+      const res = await fetch(`${API_URL}/productos`);
+      const data = await res.json();
+      productosDisponibles = data;
+      const tabla = document.getElementById("tablaProductos");
+      tabla.innerHTML = "";
+
+      data.forEach(prod => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${prod.id}</td>
+            <td>${prod.nombre}</td>
+            <td>$${parseFloat(prod.precio).toLocaleString()}</td>
+            <td>${prod.categoria}</td>
+            <td>${prod.stock}</td>
+            <td class="acciones">
+              <button class="btn-edit" onclick="editarProducto(${prod.id}, '${prod.nombre.replace(/'/g, "\\'")}', ${prod.precio}, ${prod.categoria}, ${prod.stock})">✏️ Editar</button>
+              <button class="btn-delete" onclick="eliminarProducto(${prod.id})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+      });
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+    }
+  }
+
+  document.getElementById("formProducto").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("prod_id").value;
+    const producto = {
+      nombre: document.getElementById("prod_nombre").value,
+      precio: document.getElementById("prod_precio").value,
+      categoria: document.getElementById("prod_proveedor").value,
+      stock: document.getElementById("prod_stock").value
+    };
+
+    const metodo = id ? "PUT" : "POST";
+    const url = id ? `${API_URL}/productos/${id}` : `${API_URL}/productos`;
+
+    try {
+      await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(producto)
+      });
+      e.target.reset();
+      document.getElementById("prod_id").value = "";
+      cargarProductos();
+      alert("✅ Producto guardado correctamente");
+    } catch (error) {
+      alert("❌ Error al guardar producto");
+    }
+  });
+
+  function editarProducto(id, nombre, precio, categoria, stock) {
+    document.getElementById("prod_id").value = id;
+    document.getElementById("prod_nombre").value = nombre;
+    document.getElementById("prod_precio").value = precio;
+    document.getElementById("prod_proveedor").value = categoria;
+    document.getElementById("prod_stock").value = stock;
+    window.scrollTo(0, 0);
+  }
+
+  async function eliminarProducto(id) {
+    if (confirm("¿Seguro que deseas eliminar este producto?")) {
+      try {
+        await fetch(`${API_URL}/productos/${id}`, { method: "DELETE" });
+        cargarProductos();
+        alert("✅ Producto eliminado");
+      } catch (error) {
+        alert("❌ Error al eliminar producto");
+      }
+    }
+  }
+
+  // ====================== PROVEEDORES ======================
+  async function cargarProveedores() {
+    try {
+      const res = await fetch(`${API_URL}/proveedores`);
+      const data = await res.json();
+      const tabla = document.getElementById("tablaProveedores");
+      const select = document.getElementById("prod_proveedor");
+
+      tabla.innerHTML = "";
+      select.innerHTML = '<option value="">Seleccione un proveedor</option>';
+
+      data.forEach(prov => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${prov.ID_proveedor}</td>
+            <td>${prov.NIT || ''}</td>
+            <td>${prov.Nombre}</td>
+            <td>${prov.Correo || ''}</td>
+            <td>${prov.Telefono || ''}</td>
+            <td>${prov.Direccion || ''}</td>
+            <td class="acciones">
+              <button class="btn-edit" onclick='editarProveedor(${JSON.stringify(prov)})'>✏️ Editar</button>
+              <button class="btn-delete" onclick="eliminarProveedor(${prov.ID_proveedor})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+        select.innerHTML += `<option value="${prov.ID_proveedor}">${prov.Nombre}</option>`;
+      });
+    } catch (error) {
+      console.error("Error al cargar proveedores:", error);
+    }
+  }
+
+  // ====================== CLIENTES ======================
+  async function cargarClientes() {
+    try {
+      const res = await fetch(`${API_URL}/clientes`);
+      const data = await res.json();
+      const tabla = document.getElementById("tablaClientes");
+      tabla.innerHTML = "";
+
+      data.forEach(cli => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${cli.id}</td>
+            <td>${cli.cedula || ''}</td>
+            <td>${cli.nombre}</td>
+            <td>${cli.correo || ''}</td>
+            <td>${cli.telefono || ''}</td>
+            <td>${cli.direccion || ''}</td>
+            <td class="acciones">
+              <button class="btn-edit" onclick='editarCliente(${JSON.stringify(cli)})'>✏️ Editar</button>
+              <button class="btn-delete" onclick="eliminarCliente(${cli.id})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+      });
+    } catch (error) {
+      console.error("Error al cargar clientes:", error);
+    }
+  }
+
+  // ====================== VENTAS ======================
+  async function cargarVentas() {
+    // Implementación similar: fetch, render tablaVentas
+  }
+
+  // ====================== SERVICIOS ======================
+  async function cargarServicios() {
+    // Implementación similar: fetch, render tablaServicios
+  }
+
+  // ====================== EMPLEADOS ======================
+  async function cargarEmpleadosAdmin() {
+    // Implementación similar: fetch, render tablaEmpleados
+  }
+
+  function cargarEmpleadosParaSelects() {
+    // Cargar empleados para dropdowns en ventas/servicios
+  }
+
+  function cargarProductosParaVenta() {
+    // Cargar productos disponibles para ventas
+  }
+
+  // ====================== REPORTES ======================
+  function cargarReportes() {
+    // Lógica para cargar estadísticas y productos más vendidos
+  }
+</script>
