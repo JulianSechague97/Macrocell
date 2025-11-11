@@ -132,6 +132,7 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script>
     let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
@@ -205,16 +206,62 @@
       }
     }
 
-    function procederCompra() {
+    async function procederCompra() {
       if (carrito.length === 0) {
         alert("Tu carrito está vacío");
         return;
       }
-      alert("Función de pago en desarrollo. Total: $" + carrito.reduce((s, p) => s + p.precio * p.cantidad, 0).toFixed(2));
-    }
 
+      // Obtener usuario desde localStorage
+      const usuarioActivo = JSON.parse(localStorage.getItem("usuarioActivo")) || {};
+      const ID_usuario = usuarioActivo.ID_usuario || null; // Empleado que realiza la venta
+      const ID_cliente = usuarioActivo.ID_cliente || null; // Cliente (si aplica)
+
+      // Preparar productos para enviar al backend
+      const productos = carrito.map(p => ({
+        ID_producto: p.id,
+        cantidad: p.cantidad,
+        precio_venta: p.precio
+      }));
+
+      const payload = {
+        ID_usuario,
+        ID_cliente,
+        productos
+      };
+
+      const btn = document.querySelector(".btn-continuar");
+      btn.disabled = true;
+      btn.textContent = "Procesando...";
+
+      try {
+        const res = await fetch(`${API_URL}/api/ventas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+
+        alert(`✅ Compra realizada exitosamente.\nNúmero de venta: ${data.ID_venta}\nTotal: $${data.total}`);
+        
+        // Vaciar carrito tras éxito
+        carrito = [];
+        localStorage.setItem("carrito", JSON.stringify(carrito));
+        cargarCarrito();
+        
+      } catch (error) {
+        alert("❌ Error al procesar la compra: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Proceder al pago";
+      }
+    }
+  </script>
+
+  <script>
     cargarCarrito();
   </script>
-  <script src="config.js"></script>
 </body>
 </html>

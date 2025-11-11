@@ -29,7 +29,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 // Logging middleware (desarrollo)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
@@ -50,6 +49,7 @@ app.use("/Imagenes", express.static(path.join(__dirname, "../frontend/Imagenes")
 app.use("/api/productos", productoRoutes);
 app.use("/api/proveedores", proveedorRoutes);
 app.use("/api/clientes", clienteRoutes);
+app.use("/api/empleados", empleadoRoutes);
 app.use("/api/ventas", ventaRoutes);
 app.use("/api/servicios", servicioTecnicoRoutes);
 app.use("/api/carrito", carritoRoutes);  // ✅ SOLO UNA VEZ
@@ -81,11 +81,13 @@ app.post("/loginEmpleado", (req, res) => {
     if (results.length > 0) {
       // No enviar la contraseña al cliente
       const { Contrasena_acceso, ...usuario } = results[0];
-      res.json({ 
-        success: true, 
-        tipo: "empleado", 
-        usuario 
-      });
+        // Devolver el rol real del empleado (puede ser 'admin' o 'empleado')
+        const tipoUsuario = usuario.rol || 'empleado';
+        res.json({ 
+          success: true, 
+          tipo: tipoUsuario,
+          usuario 
+        });
     } else {
       res.json({ 
         success: false, 

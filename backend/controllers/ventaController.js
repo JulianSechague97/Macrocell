@@ -55,27 +55,46 @@ export const obtenerDetalleVenta = (req, res) => {
 export const registrarVenta = (req, res) => {
   const { ID_usuario, ID_cliente, productos } = req.body;
   
-  // Calcular el total
-  let total = 0;
-  productos.forEach(prod => {
-    total += prod.cantidad * prod.precio_venta;
-  });
+  // Validar que hay al menos un producto
+  if (!productos || productos.length === 0) {
+    return res.status(400).json({ error: "Debe haber al menos un producto en la venta" });
+  }
   
-  // Insertar la venta
+  // Validar y normalizar productos, calcular el total
+  let total = 0;
+  // Normalize products: accept ID_producto or id, and precio_venta or precio
+  for (const prod of productos) {
+    const idProd = prod.ID_producto ?? prod.id ?? prod.ID ?? null;
+    const precio = prod.precio_venta ?? prod.precio ?? prod.precioVenta ?? 0;
+    const cantidad = Number(prod.cantidad || 0);
+
+    if (!idProd) {
+      return res.status(400).json({ error: `Producto sin ID (ID_producto) en payload: ${JSON.stringify(prod)}` });
+    }
+
+    // ensure numeric
+    total += cantidad * Number(precio);
+    // attach normalized fields for later use
+    prod._ID_producto = idProd;
+    prod._precio_venta = Number(precio);
+    prod.cantidad = cantidad;
+  }
+  
+  // Insertar la venta (ID_usuario puede ser null si es compra de cliente)
   const queryVenta = "INSERT INTO venta (ID_usuario, ID_cliente, Fecha_venta, Total) VALUES (?, ?, NOW(), ?)";
   
-  conexion.query(queryVenta, [ID_usuario, ID_cliente, total], (err, result) => {
+  conexion.query(queryVenta, [ID_usuario || null, ID_cliente || null, total], (err, result) => {
     if (err) {
       console.error("Error al registrar venta:", err);
       return res.status(500).json({ error: "Error al registrar venta: " + err.message });
     }
     
     const ID_venta = result.insertId;
-    
-    // Insertar productos de la venta
-    const queryProductos = "INSERT INTO venta_producto (ID_venta, ID_producto, Cantidad) VALUES ?";
-    const valores = productos.map(prod => [ID_venta, prod.ID_producto, prod.cantidad]);
-    
+
+    // Insertar productos de la venta (incluyendo precio por unidad)
+    const queryProductos = "INSERT INTO venta_producto (ID_venta, ID_producto, Cantidad, Precio) VALUES ?";
+    const valores = productos.map(prod => [ID_venta, prod._ID_producto, prod.cantidad, prod._precio_venta]);
+
     conexion.query(queryProductos, [valores], (err2) => {
       if (err2) {
         console.error("Error al insertar productos:", err2);
@@ -85,13 +104,13 @@ export const registrarVenta = (req, res) => {
       // Actualizar stock de productos
       productos.forEach(prod => {
         const queryStock = "UPDATE producto SET Stock_actual = Stock_actual - ? WHERE ID_producto = ?";
-        conexion.query(queryStock, [prod.cantidad, prod.ID_producto], (errStock) => {
+        conexion.query(queryStock, [prod.cantidad, prod._ID_producto], (errStock) => {
           if (errStock) console.error("Error al actualizar stock:", errStock);
         });
       });
       
       res.json({ 
-        message: "Venta registrada correctamente ", 
+        message: "Venta registrada correctamente", 
         ID_venta,
         total 
       });

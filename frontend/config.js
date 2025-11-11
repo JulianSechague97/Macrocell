@@ -1,2 +1,2 @@
 // Configuración global del backend
-const API_URL = "https://aliza-falser-mui.ngrok-free.dev -> http://localhost:3000";
+const API_URL = "https://melody-nondeflected-braylen.ngrok-free.dev";

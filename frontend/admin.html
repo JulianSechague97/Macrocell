@@ -695,8 +695,9 @@
       </table>
     </div>
   </div>
+  <script src="config.js"></script>
 <script>
-  const API_URL = `${API_URL}/api`;
+  const API = API_URL + '/api';
   let productosDisponibles = [];
 
   // FUNCION DE TABS
@@ -732,7 +733,7 @@
   // ====================== PRODUCTOS ======================
   async function cargarProductos() {
     try {
-      const res = await fetch(`${API_URL}/productos`);
+  const res = await fetch(`${API}/productos`);
       const data = await res.json();
       productosDisponibles = data;
       const tabla = document.getElementById("tablaProductos");
@@ -767,8 +768,8 @@
       stock: document.getElementById("prod_stock").value
     };
 
-    const metodo = id ? "PUT" : "POST";
-    const url = id ? `${API_URL}/productos/${id}` : `${API_URL}/productos`;
+  const metodo = id ? "PUT" : "POST";
+  const url = id ? `${API}/productos/${id}` : `${API}/productos`;
 
     try {
       await fetch(url, {
@@ -796,8 +797,8 @@
 
   async function eliminarProducto(id) {
     if (confirm("¿Seguro que deseas eliminar este producto?")) {
-      try {
-        await fetch(`${API_URL}/productos/${id}`, { method: "DELETE" });
+        try {
+        await fetch(`${API}/productos/${id}`, { method: "DELETE" });
         cargarProductos();
         alert("✅ Producto eliminado");
       } catch (error) {
@@ -809,7 +810,7 @@
   // ====================== PROVEEDORES ======================
   async function cargarProveedores() {
     try {
-      const res = await fetch(`${API_URL}/proveedores`);
+  const res = await fetch(`${API}/proveedores`);
       const data = await res.json();
       const tabla = document.getElementById("tablaProveedores");
       const select = document.getElementById("prod_proveedor");
@@ -841,7 +842,7 @@
   // ====================== CLIENTES ======================
   async function cargarClientes() {
     try {
-      const res = await fetch(`${API_URL}/clientes`);
+  const res = await fetch(`${API}/clientes`);
       const data = await res.json();
       const tabla = document.getElementById("tablaClientes");
       tabla.innerHTML = "";
@@ -868,29 +869,372 @@
 
   // ====================== VENTAS ======================
   async function cargarVentas() {
-    // Implementación similar: fetch, render tablaVentas
+    try {
+      const res = await fetch(`${API}/ventas`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const tabla = document.getElementById('tablaVentas');
+      tabla.innerHTML = '';
+
+      if (data.length === 0) {
+        tabla.innerHTML = '<tr><td colspan="6" class="empty-state">Sin ventas registradas</td></tr>';
+        return;
+      }
+
+      data.forEach(venta => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${venta.ID_venta}</td>
+            <td>${new Date(venta.Fecha_venta).toLocaleDateString('es-CO')}</td>
+            <td>${venta.nombre_cliente || 'N/A'}</td>
+            <td>${venta.nombre_empleado || 'N/A'}</td>
+            <td>$${parseFloat(venta.Total).toLocaleString('es-CO', {minimumFractionDigits: 2})}</td>
+            <td class="acciones">
+              <button class="btn-delete" onclick="eliminarVenta(${venta.ID_venta})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+      });
+    } catch (error) {
+      console.error('Error al cargar ventas:', error);
+    }
+  }
+
+  async function eliminarVenta(id) {
+    if (!confirm('¿Seguro que deseas eliminar esta venta?')) return;
+    try {
+      const res = await fetch(`${API}/ventas/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      alert('✅ Venta eliminada');
+      cargarVentas();
+    } catch (error) {
+      alert('❌ Error al eliminar venta: ' + error.message);
+    }
   }
 
   // ====================== SERVICIOS ======================
   async function cargarServicios() {
-    // Implementación similar: fetch, render tablaServicios
+    try {
+      const res = await fetch(`${API}/servicios`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const tabla = document.getElementById('tablaServicios');
+      tabla.innerHTML = '';
+
+      if (data.length === 0) {
+        tabla.innerHTML = '<tr><td colspan="8" class="empty-state">Sin servicios registrados</td></tr>';
+        return;
+      }
+
+      data.forEach(srv => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${srv.ID_servicioTecnico}</td>
+            <td>${srv.nombre_cliente || 'N/A'}</td>
+            <td>${srv.Descripcion_falla || 'N/A'}</td>
+            <td>${new Date(srv.Fecha_ingreso).toLocaleDateString('es-CO')}</td>
+            <td>${new Date(srv.Fecha_entrega).toLocaleDateString('es-CO')}</td>
+            <td><span class="badge-rol ${srv.Estado === 'Entregado' ? 'badge-empleado' : 'badge-admin'}">${srv.Estado}</span></td>
+            <td>$${parseFloat(srv.Costo_reparacion).toLocaleString('es-CO', {minimumFractionDigits: 2})}</td>
+            <td class="acciones">
+              <button class="btn-edit" onclick='editarServicio(${JSON.stringify(srv)})'>✏️ Editar</button>
+              <button class="btn-delete" onclick="eliminarServicio(${srv.ID_servicioTecnico})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+      });
+    } catch (error) {
+      console.error('Error al cargar servicios:', error);
+    }
+  }
+
+  function editarServicio(srv) {
+    document.getElementById('serv_id').value = srv.ID_servicioTecnico;
+    document.getElementById('serv_cliente').value = srv.ID_cliente;
+    document.getElementById('serv_empleado').value = srv.ID_usuario;
+    document.getElementById('serv_fecha_entrega').value = srv.Fecha_entrega ? srv.Fecha_entrega.split('T')[0] : '';
+    document.getElementById('serv_estado').value = srv.Estado;
+    document.getElementById('serv_costo').value = srv.Costo_reparacion;
+    document.getElementById('serv_descripcion').value = srv.Descripcion_falla;
+    window.scrollTo(0, 0);
+  }
+
+  async function eliminarServicio(id) {
+    if (!confirm('¿Seguro que deseas eliminar este servicio?')) return;
+    try {
+      const res = await fetch(`${API}/servicios/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      alert('✅ Servicio eliminado');
+      cargarServicios();
+    } catch (error) {
+      alert('❌ Error al eliminar servicio: ' + error.message);
+    }
   }
 
   // ====================== EMPLEADOS ======================
   async function cargarEmpleadosAdmin() {
-    // Implementación similar: fetch, render tablaEmpleados
+    try {
+      const res = await fetch(`${API}/empleados`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const tabla = document.getElementById('tablaEmpleados');
+      tabla.innerHTML = '';
+
+      data.forEach(emp => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${emp.ID_usuario}</td>
+            <td>${emp.Cedula || ''}</td>
+            <td>${emp.Nombre}</td>
+            <td>${emp.Correo}</td>
+            <td>${emp.Telefono || ''}</td>
+            <td><span class="badge-rol ${emp.rol === 'admin' ? 'badge-admin' : 'badge-empleado'}">${emp.rol}</span></td>
+            <td class="acciones">
+              <button class="btn-edit" onclick='editarEmpleado(${JSON.stringify(emp)})'>✏️ Editar</button>
+              <button class="btn-delete" onclick="eliminarEmpleadoAdmin(${emp.ID_usuario})">🗑️ Eliminar</button>
+            </td>
+          </tr>`;
+      });
+    } catch (error) {
+      console.error('Error al cargar empleados:', error);
+    }
   }
+
+  // Editar: rellenar formulario con datos del empleado
+  function editarEmpleado(emp) {
+    document.getElementById('emp_id').value = emp.ID_usuario;
+    document.getElementById('emp_cedula').value = emp.Cedula || '';
+    document.getElementById('emp_nombre').value = emp.Nombre || '';
+    document.getElementById('emp_correo').value = emp.Correo || '';
+    document.getElementById('emp_telefono').value = emp.Telefono || '';
+    document.getElementById('emp_rol').value = emp.rol || 'empleado';
+    window.scrollTo(0, 0);
+  }
+
+  // Eliminar empleado desde admin
+  async function eliminarEmpleadoAdmin(id) {
+    if (!confirm('¿Seguro que deseas eliminar este empleado?')) return;
+    try {
+      const res = await fetch(`${API}/empleados/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+      alert('✅ Empleado eliminado');
+      cargarEmpleadosAdmin();
+    } catch (error) {
+      alert('❌ Error al eliminar empleado: ' + error.message);
+    }
+  }
+
+  // Manejo del submit para crear/editar empleados
+  document.getElementById('formEmpleado').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('emp_id').value;
+    const Cedula = document.getElementById('emp_cedula').value.trim();
+    const Nombre = document.getElementById('emp_nombre').value.trim();
+    const Correo = document.getElementById('emp_correo').value.trim();
+    const Telefono = document.getElementById('emp_telefono').value.trim();
+    const Contrasena_acceso = document.getElementById('emp_password').value;
+    const rol = document.getElementById('emp_rol').value;
+
+    // Validaciones básicas
+    if (!Nombre || !Correo) {
+      alert('Nombre y correo son obligatorios');
+      return;
+    }
+
+    if (!id && (!Contrasena_acceso || Contrasena_acceso.length < 6)) {
+      alert('La contraseña es obligatoria y debe tener al menos 6 caracteres');
+      return;
+    }
+
+    const payload = { Cedula: Cedula || null, Nombre, Correo, Telefono: Telefono || null, rol };
+    if (Contrasena_acceso) payload.Contrasena_acceso = Contrasena_acceso;
+
+    const metodo = id ? 'PUT' : 'POST';
+    const url = id ? `${API}/empleados/${id}` : `${API}/empleados`;
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = id ? 'Guardando...' : 'Creando...';
+
+    try {
+      const res = await fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || JSON.stringify(data));
+
+      alert(id ? '✅ Empleado actualizado' : '✅ Empleado creado');
+      e.target.reset();
+      document.getElementById('emp_id').value = '';
+      cargarEmpleadosAdmin();
+    } catch (error) {
+      alert('❌ Error al guardar empleado: ' + error.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar Empleado';
+    }
+  });
 
   function cargarEmpleadosParaSelects() {
     // Cargar empleados para dropdowns en ventas/servicios
+    fetch(`${API}/empleados`)
+      .then(r => r.json())
+      .then(data => {
+        const selectVenta = document.getElementById('venta_empleado');
+        const selectServicio = document.getElementById('serv_empleado');
+        selectVenta.innerHTML = '<option value="">Seleccione un empleado</option>';
+        selectServicio.innerHTML = '<option value="">Seleccione un empleado</option>';
+        data.forEach(emp => {
+          const opt1 = document.createElement('option');
+          opt1.value = emp.ID_usuario;
+          opt1.textContent = emp.Nombre;
+          selectVenta.appendChild(opt1);
+          const opt2 = opt1.cloneNode(true);
+          selectServicio.appendChild(opt2);
+        });
+      })
+      .catch(e => console.error('Error cargando empleados:', e));
   }
 
   function cargarProductosParaVenta() {
     // Cargar productos disponibles para ventas
+    fetch(`${API}/productos`)
+      .then(r => r.json())
+      .then(data => {
+        const div = document.getElementById('productos-venta');
+        div.innerHTML = '';
+        data.forEach(prod => {
+          const item = document.createElement('div');
+          item.style.marginBottom = '10px';
+          item.innerHTML = `
+            <label>
+              <input type="checkbox" class="producto-checkbox" data-id="${prod.ID_producto}" data-precio="${prod.Precio_venta}">
+              ${prod.Nombre} - $${prod.Precio_venta}
+            </label>
+            <input type="number" min="1" value="1" class="producto-cantidad" data-id="${prod.ID_producto}" style="width: 60px;">
+          `;
+          div.appendChild(item);
+        });
+      })
+      .catch(e => console.error('Error cargando productos:', e));
   }
+
+  // Manejador para formVenta
+  document.getElementById('formVenta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ID_usuario = document.getElementById('venta_empleado').value;
+    const ID_cliente = document.getElementById('venta_cliente').value || null;
+
+    const productosChecked = Array.from(document.querySelectorAll('.producto-checkbox:checked'));
+    if (productosChecked.length === 0) {
+      alert('Selecciona al menos un producto');
+      return;
+    }
+
+    const productos = productosChecked.map(chk => {
+      const id = chk.dataset.id;
+      const cantidad = parseInt(document.querySelector(`.producto-cantidad[data-id="${id}"]`).value) || 1;
+      const precio_venta = parseFloat(chk.dataset.precio);
+      return { ID_producto: parseInt(id), cantidad, precio_venta };
+    });
+
+    const payload = { ID_usuario: parseInt(ID_usuario), ID_cliente: ID_cliente ? parseInt(ID_cliente) : null, productos };
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Registrando...';
+
+    try {
+      const res = await fetch(`${API}/ventas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+
+      alert(`✅ Venta registrada.\nID: ${data.ID_venta}\nTotal: $${data.total}`);
+      e.target.reset();
+      cargarVentas();
+    } catch (error) {
+      alert('❌ Error al registrar venta: ' + error.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Registrar Venta';
+    }
+  });
+
+  // Manejador para formServicio
+  document.getElementById('formServicio').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('serv_id').value;
+    const ID_usuario = document.getElementById('serv_empleado').value;
+    const ID_cliente = document.getElementById('serv_cliente').value;
+    const Fecha_entrega = document.getElementById('serv_fecha_entrega').value;
+    const Estado = document.getElementById('serv_estado').value;
+    const Costo_reparacion = document.getElementById('serv_costo').value;
+    const Descripcion_falla = document.getElementById('serv_descripcion').value;
+
+    if (!ID_usuario || !ID_cliente || !Fecha_entrega || !Costo_reparacion || !Descripcion_falla) {
+      alert('Todos los campos son obligatorios');
+      return;
+    }
+
+    const payload = {
+      ID_usuario: parseInt(ID_usuario),
+      ID_cliente: parseInt(ID_cliente),
+      Fecha_entrega,
+      Estado,
+      Costo_reparacion: parseFloat(Costo_reparacion),
+      Descripcion_falla
+    };
+
+    const metodo = id ? 'PUT' : 'POST';
+    const url = id ? `${API}/servicios/${id}` : `${API}/servicios`;
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      const res = await fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+
+      alert(id ? '✅ Servicio actualizado' : '✅ Servicio creado');
+      e.target.reset();
+      document.getElementById('serv_id').value = '';
+      cargarServicios();
+    } catch (error) {
+      alert('❌ Error al guardar servicio: ' + error.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar Servicio';
+    }
+  });
 
   // ====================== REPORTES ======================
   function cargarReportes() {
     // Lógica para cargar estadísticas y productos más vendidos
+    fetch(`${API_URL}/top5`)
+      .then(r => r.json())
+      .then(data => {
+        const tabla = document.getElementById('tablaReporteProductos');
+        tabla.innerHTML = '';
+        data.forEach(prod => {
+          tabla.innerHTML += `
+            <tr>
+              <td>${prod.Nombre}</td>
+              <td>${prod.total_vendido}</td>
+              <td>$${(prod.total_vendido * prod.Precio_venta).toLocaleString('es-CO', {minimumFractionDigits: 2})}</td>
+            </tr>`;
+        });
+      })
+      .catch(e => console.error('Error cargando top5:', e));
   }
 </script>
