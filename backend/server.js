@@ -58,42 +58,51 @@ app.use("/api/carrito", carritoRoutes);  // ✅ SOLO UNA VEZ
 // LOGIN EMPLEADOS
 // ============================================
 app.post("/loginEmpleado", (req, res) => {
+  // aceptar en el mismo campo: correo o nombre o cédula
   const { correo, contrasena } = req.body;
-  
+
   if (!correo || !contrasena) {
     return res.status(400).json({ 
       success: false, 
-      message: "Correo y contraseña son requeridos" 
+      message: "Correo/usuario y contraseña son requeridos" 
     });
   }
 
-  const query = "SELECT * FROM empleados WHERE Correo = ? AND Contrasena_acceso = ?";
+  const identifier = correo;
+  // Intentamos primero buscar por una columna 'Usuario' (si existe) o por Correo
+  const tryUsuarioQuery = "SELECT * FROM empleados WHERE (Correo = ? OR Usuario = ?) AND Contrasena_acceso = ?";
 
-  conexion.query(query, [correo, contrasena], (error, results) => {
+  conexion.query(tryUsuarioQuery, [identifier, identifier, contrasena], (error, results) => {
     if (error) {
-      console.error("Error en login empleado:", error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Error en el servidor" 
-      });
-    }
-    
-    if (results.length > 0) {
-      // No enviar la contraseña al cliente
-      const { Contrasena_acceso, ...usuario } = results[0];
-        // Devolver el rol real del empleado (puede ser 'admin' o 'empleado')
-        const tipoUsuario = usuario.rol || 'empleado';
-        res.json({ 
-          success: true, 
-          tipo: tipoUsuario,
-          usuario 
+      // Si falla por campo no existente (Usuario), hacemos fallback a buscar por Correo
+      if (error.code === 'ER_BAD_FIELD_ERROR') {
+        const fallbackQuery = "SELECT * FROM empleados WHERE Correo = ? AND Contrasena_acceso = ?";
+        return conexion.query(fallbackQuery, [identifier, contrasena], (err2, results2) => {
+          if (err2) {
+            console.error("Error en login empleado (fallback):", err2);
+            return res.status(500).json({ success: false, message: "Error en el servidor" });
+          }
+          if (results2.length > 0) {
+            const { Contrasena_acceso, ...usuario } = results2[0];
+            const tipoUsuario = usuario.rol || 'empleado';
+            return res.json({ success: true, tipo: tipoUsuario, usuario });
+          }
+          return res.json({ success: false, message: "Credenciales incorrectas" });
         });
-    } else {
-      res.json({ 
-        success: false, 
-        message: "Credenciales incorrectas" 
-      });
+      }
+
+      console.error("Error en login empleado:", error);
+      return res.status(500).json({ success: false, message: "Error en el servidor" });
     }
+
+    if (results.length > 0) {
+      const { Contrasena_acceso, ...usuario } = results[0];
+      const tipoUsuario = usuario.rol || 'empleado';
+      return res.json({ success: true, tipo: tipoUsuario, usuario });
+    }
+
+    // Si no encontramos, devolver credenciales incorrectas
+    return res.json({ success: false, message: "Credenciales incorrectas" });
   });
 });
 

@@ -32,27 +32,42 @@ export const obtenerServicios = (req, res) => {
 //  Registrar nuevo servicio técnico
 export const registrarServicio = (req, res) => {
   const { ID_usuario, ID_cliente, Descripcion_falla, Fecha_entrega, Estado_servicio, Costo } = req.body;
-  
+  // Log para depuración: mostrar payload recibido
+  console.log("[registrarServicio] payload:", { ID_usuario, ID_cliente, Descripcion_falla, Fecha_entrega, Estado_servicio, Costo });
   const query = `
     INSERT INTO servicio_tecnico 
     (ID_usuario, ID_cliente, Descripcion_falla, Fecha_ingreso, Fecha_entrega, Estado_servicio, Costo) 
     VALUES (?, ?, ?, NOW(), ?, ?, ?)
   `;
-  
-  conexion.query(
-    query, 
-    [ID_usuario, ID_cliente, Descripcion_falla, Fecha_entrega, Estado_servicio, Costo], 
-    (err, result) => {
-      if (err) {
-        console.error("Error al registrar servicio:", err);
-        return res.status(500).json({ error: "Error al registrar servicio: " + err.message });
+
+  // Si el cliente envía ID_usuario, algunos triggers del esquema esperan una variable de sesión
+  // llamada @id_empleado. Para compatibilidad, la establecemos antes del INSERT.
+  const runInsert = () => {
+    conexion.query(
+      query, 
+      [ID_usuario, ID_cliente, Descripcion_falla, Fecha_entrega, Estado_servicio, Costo], 
+      (err, result) => {
+        if (err) {
+          console.error("Error al registrar servicio:", err);
+          return res.status(500).json({ error: "Error al registrar servicio: " + err.message });
+        }
+        res.json({ 
+          message: "Servicio técnico registrado correctamente ",
+          ID_servicio: result.insertId 
+        });
       }
-      res.json({ 
-        message: "Servicio técnico registrado correctamente ",
-        ID_servicio: result.insertId 
-      });
-    }
-  );
+    );
+  };
+
+  if (ID_usuario) {
+    // establecer variable de sesión para triggers que la utilicen
+    conexion.query('SET @id_empleado = ?', [ID_usuario], (setErr) => {
+      if (setErr) console.warn('No se pudo establecer @id_empleado:', setErr.message);
+      runInsert();
+    });
+  } else {
+    runInsert();
+  }
 };
 
 //  Actualizar servicio técnico

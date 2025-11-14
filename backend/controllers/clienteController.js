@@ -8,22 +8,32 @@ export const obtenerClientes = (req, res) => {
   });
 };
 
+// obtener un cliente por id
+export const obtenerClientePorId = (req, res) => {
+  const { id } = req.params;
+  conexion.query("SELECT * FROM cliente WHERE ID_cliente = ?", [id], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    if (!results || results.length === 0) return res.status(404).json({ message: "Cliente no encontrado" });
+    res.json(results[0]);
+  });
+};
+
 // registra un nuevo cliente
 export const registrarCliente = (req, res) => {
-  const { Nombre, Telefono, Correo } = req.body;
-  const sql = "INSERT INTO cliente (Nombre, Telefono, Correo) VALUES (?, ?, ?)";
-  conexion.query(sql, [Nombre, Telefono, Correo], (err, result) => {
+  const { Cedula, Nombre, Correo, Telefono, Direccion } = req.body;
+  const sql = "INSERT INTO cliente (Cedula, Nombre, Correo, Telefono, Direccion) VALUES (?, ?, ?, ?, ?)";
+  conexion.query(sql, [Cedula || null, Nombre, Correo || null, Telefono || null, Direccion || null], (err, result) => {
     if (err) return res.status(500).json({ error: err });
-    res.json({ message: "Cliente registrado correctamente" });
+    res.status(201).json({ message: "Cliente registrado correctamente", insertId: result.insertId });
   });
 };
 
 //  se actuliza el cliente seleccionado
 export const actualizarCliente = (req, res) => {
   const { id } = req.params;
-  const { Nombre, Telefono, Correo } = req.body;
-  const sql = "UPDATE cliente SET Nombre=?, Telefono=?, Correo=? WHERE ID_cliente=?";
-  conexion.query(sql, [Nombre, Telefono, Correo, id], (err) => {
+  const { Cedula, Nombre, Correo, Telefono, Direccion } = req.body;
+  const sql = "UPDATE cliente SET Cedula=?, Nombre=?, Correo=?, Telefono=?, Direccion=? WHERE ID_cliente=?";
+  conexion.query(sql, [Cedula || null, Nombre, Correo || null, Telefono || null, Direccion || null, id], (err) => {
     if (err) return res.status(500).json({ error: err });
     res.json({ message: "Cliente actualizado correctamente" });
   });

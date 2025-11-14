@@ -1,6 +1,7 @@
 import express from "express";
 import {
   obtenerClientes,
+  obtenerClientePorId,
   registrarCliente,
   actualizarCliente,
   eliminarCliente
@@ -9,6 +10,7 @@ import {
 const router = express.Router();
 
 router.get("/", obtenerClientes);
+router.get("/:id", obtenerClientePorId);
 router.post("/", registrarCliente);
 router.put("/:id", actualizarCliente);
 router.delete("/:id", eliminarCliente);

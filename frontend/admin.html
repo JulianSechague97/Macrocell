@@ -842,28 +842,144 @@
   // ====================== CLIENTES ======================
   async function cargarClientes() {
     try {
-  const res = await fetch(`${API}/clientes`);
+      const res = await fetch(`${API}/clientes`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const tabla = document.getElementById("tablaClientes");
       tabla.innerHTML = "";
 
+      if (!data || data.length === 0) {
+        tabla.innerHTML = '<tr><td colspan="7" class="empty-state">Sin clientes registrados</td></tr>';
+        return;
+      }
+
+      // también actualizar el select de clientes para ventas
+      const selectVentaCliente = document.getElementById('venta_cliente');
+      if (selectVentaCliente) selectVentaCliente.innerHTML = '';
+
       data.forEach(cli => {
         tabla.innerHTML += `
           <tr>
-            <td>${cli.id}</td>
-            <td>${cli.cedula || ''}</td>
-            <td>${cli.nombre}</td>
-            <td>${cli.correo || ''}</td>
-            <td>${cli.telefono || ''}</td>
-            <td>${cli.direccion || ''}</td>
+            <td>${cli.ID_cliente}</td>
+            <td>${cli.Cedula || ''}</td>
+            <td>${cli.Nombre || ''}</td>
+            <td>${cli.Correo || ''}</td>
+            <td>${cli.Telefono || ''}</td>
+            <td>${cli.Direccion || ''}</td>
             <td class="acciones">
-              <button class="btn-edit" onclick='editarCliente(${JSON.stringify(cli)})'>✏️ Editar</button>
-              <button class="btn-delete" onclick="eliminarCliente(${cli.id})">🗑️ Eliminar</button>
+              <button class="btn-edit btn-edit-client" data-id="${cli.ID_cliente}">✏️ Editar</button>
+              <button class="btn-delete btn-delete-client" data-id="${cli.ID_cliente}">🗑️ Eliminar</button>
             </td>
           </tr>`;
+        if (selectVentaCliente) {
+          const opt = document.createElement('option');
+          opt.value = cli.ID_cliente;
+          opt.textContent = cli.Nombre || (`ID ${cli.ID_cliente}`);
+          selectVentaCliente.appendChild(opt);
+        }
+      });
+
+      // attach event listeners to the newly created buttons (safer than inline onclick)
+      document.querySelectorAll('.btn-edit-client').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.id;
+          if (id) editarCliente(id);
+        });
+      });
+      document.querySelectorAll('.btn-delete-client').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.id;
+          if (id) eliminarCliente(id);
+        });
       });
     } catch (error) {
       console.error("Error al cargar clientes:", error);
+    }
+  }
+
+  // manejar formulario de clientes (crear / actualizar)
+  const formCliente = document.getElementById('formCliente');
+  if (formCliente) {
+    formCliente.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('cli_id').value;
+      const Cedula = document.getElementById('cli_cedula').value || null;
+      const Nombre = document.getElementById('cli_nombre').value || '';
+      const Correo = document.getElementById('cli_correo').value || null;
+      const Telefono = document.getElementById('cli_telefono').value || null;
+      const Direccion = document.getElementById('cli_direccion').value || null;
+
+      try {
+        if (!Nombre || !Telefono) {
+          alert('Por favor ingresa los campos requeridos (Nombre y Teléfono).');
+          return;
+        }
+
+        if (id) {
+          // actualizar
+          const res = await fetch(`${API}/clientes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Cedula, Nombre, Correo, Telefono, Direccion })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(()=> ({}));
+            throw new Error(err.error || err.message || `HTTP ${res.status}`);
+          }
+          alert('Cliente actualizado correctamente');
+        } else {
+          // crear
+          const res = await fetch(`${API}/clientes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Cedula, Nombre, Correo, Telefono, Direccion })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(()=> ({}));
+            throw new Error(err.error || err.message || `HTTP ${res.status}`);
+          }
+          alert('Cliente creado correctamente');
+        }
+
+        // limpiar y recargar
+        document.getElementById('cli_id').value = '';
+        formCliente.reset();
+        cargarClientes();
+      } catch (err) {
+        alert('Error: ' + (err.message || err));
+      }
+    });
+  }
+
+  // editar cliente: carga datos en el formulario
+  async function editarCliente(id) {
+    try {
+      const res = await fetch(`${API}/clientes/${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const cli = await res.json();
+      document.getElementById('cli_id').value = cli.ID_cliente;
+      document.getElementById('cli_cedula').value = cli.Cedula || '';
+      document.getElementById('cli_nombre').value = cli.Nombre || '';
+      document.getElementById('cli_correo').value = cli.Correo || '';
+      document.getElementById('cli_telefono').value = cli.Telefono || '';
+      document.getElementById('cli_direccion').value = cli.Direccion || '';
+      // scroll to form
+      document.getElementById('clientes-tab').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      alert('No se pudo cargar el cliente: ' + (err.message || err));
+    }
+  }
+
+  // eliminar cliente
+  async function eliminarCliente(id) {
+    if (!confirm('¿Seguro que deseas eliminar este cliente?')) return;
+    try {
+      const res = await fetch(`${API}/clientes/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      alert('Cliente eliminado');
+      cargarClientes();
+    } catch (err) {
+      alert('Error al eliminar cliente: ' + (err.message || err));
     }
   }
 
@@ -882,17 +998,29 @@
       }
 
       data.forEach(venta => {
+        // defensivo: aceptar varios nombres posibles devueltos por el backend
+        const nombreCliente = venta.nombre_cliente ?? venta.Nombre ?? venta.nombre ?? venta.Nombre_cliente ?? 'N/A';
+        const nombreEmpleado = venta.nombre_empleado ?? venta.Nombre_empleado ?? venta.nombre_empleado ?? venta.Nombre ?? 'N/A';
+
         tabla.innerHTML += `
           <tr>
             <td>${venta.ID_venta}</td>
-            <td>${new Date(venta.Fecha_venta).toLocaleDateString('es-CO')}</td>
-            <td>${venta.nombre_cliente || 'N/A'}</td>
-            <td>${venta.nombre_empleado || 'N/A'}</td>
-            <td>$${parseFloat(venta.Total).toLocaleString('es-CO', {minimumFractionDigits: 2})}</td>
+            <td>${venta.Fecha_venta ? new Date(venta.Fecha_venta).toLocaleDateString('es-CO') : 'N/A'}</td>
+            <td>${nombreCliente}</td>
+            <td>${nombreEmpleado}</td>
+            <td>$${parseFloat(venta.Total || 0).toLocaleString('es-CO', {minimumFractionDigits: 2})}</td>
             <td class="acciones">
-              <button class="btn-delete" onclick="eliminarVenta(${venta.ID_venta})">🗑️ Eliminar</button>
+              <button class="btn-delete btn-delete-venta" data-id="${venta.ID_venta}">🗑️ Eliminar</button>
             </td>
           </tr>`;
+      });
+
+      // attach listeners for venta deletes
+      document.querySelectorAll('.btn-delete-venta').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.id;
+          if (id) eliminarVenta(id);
+        });
       });
     } catch (error) {
       console.error('Error al cargar ventas:', error);
@@ -1107,17 +1235,74 @@
         data.forEach(prod => {
           const item = document.createElement('div');
           item.style.marginBottom = '10px';
+
+          // Normalizar nombres de campos según lo que el backend pueda devolver
+          const id = prod.ID_producto ?? prod.id ?? prod.ID ?? prod.Id;
+          const nombre = prod.Nombre ?? prod.nombre ?? prod.nombre_producto ?? prod.Nombre_producto ?? prod.nombreProducto ?? 'Producto';
+          const precioRaw = prod.Precio_venta ?? prod.precio ?? prod.Precio ?? prod.precio_venta ?? 0;
+          const precio = Number(precioRaw) || 0;
+
           item.innerHTML = `
             <label>
-              <input type="checkbox" class="producto-checkbox" data-id="${prod.ID_producto}" data-precio="${prod.Precio_venta}">
-              ${prod.Nombre} - $${prod.Precio_venta}
+              <input type="checkbox" class="producto-checkbox" data-id="${id}" data-precio="${precio}">
+              ${nombre} - $${precio.toLocaleString('es-CO', {minimumFractionDigits: 2})}
             </label>
-            <input type="number" min="1" value="1" class="producto-cantidad" data-id="${prod.ID_producto}" style="width: 60px;">
+            <input type="number" min="1" value="1" class="producto-cantidad" data-id="${id}" style="width: 60px;">
           `;
           div.appendChild(item);
         });
       })
       .catch(e => console.error('Error cargando productos:', e));
+  }
+
+  // Agrega una fila de selección de producto (select + cantidad) al form de ventas
+  function agregarProductoVenta() {
+    const container = document.getElementById('productos-venta');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.style.marginBottom = '10px';
+    row.className = 'producto-select-row';
+
+    const select = document.createElement('select');
+    select.className = 'producto-select';
+    select.style.marginRight = '8px';
+
+    // option por defecto
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = 'Seleccione producto...';
+    select.appendChild(emptyOpt);
+
+    // usar productosDisponibles (cargado por cargarProductos)
+    (productosDisponibles || []).forEach(p => {
+      const id = p.ID_producto ?? p.id ?? p.ID ?? p.Id;
+      const nombre = p.Nombre ?? p.nombre ?? p.nombre_producto ?? p.Nombre_producto ?? p.nombreProducto ?? 'Producto';
+      const precioRaw = p.Precio_venta ?? p.precio ?? p.Precio ?? p.precio_venta ?? 0;
+      const precio = Number(precioRaw) || 0;
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `${nombre} - $${precio.toLocaleString('es-CO', {minimumFractionDigits:2})}`;
+      opt.dataset.precio = precio;
+      select.appendChild(opt);
+    });
+
+    const qty = document.createElement('input');
+    qty.type = 'number'; qty.min = '1'; qty.value = '1';
+    qty.className = 'producto-cantidad';
+    qty.style.width = '60px'; qty.style.marginRight = '8px';
+
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.textContent = 'Eliminar';
+    btnRemove.className = 'btn-delete';
+    btnRemove.addEventListener('click', () => row.remove());
+
+    row.appendChild(select);
+    row.appendChild(qty);
+    row.appendChild(btnRemove);
+
+    container.appendChild(row);
   }
 
   // Manejador para formVenta
@@ -1126,18 +1311,35 @@
     const ID_usuario = document.getElementById('venta_empleado').value;
     const ID_cliente = document.getElementById('venta_cliente').value || null;
 
+    // Coleccionar productos desde checkboxes y desde selects añadidos manualmente
+    const productos = [];
+
+    // desde checkboxes (renderizados por cargarProductosParaVenta)
     const productosChecked = Array.from(document.querySelectorAll('.producto-checkbox:checked'));
-    if (productosChecked.length === 0) {
+    productosChecked.forEach(chk => {
+      const id = chk.dataset.id;
+      const cantidadInput = document.querySelector(`.producto-cantidad[data-id="${id}"]`);
+      const cantidad = cantidadInput ? parseInt(cantidadInput.value) || 1 : 1;
+      const precio_venta = parseFloat(chk.dataset.precio) || 0;
+      productos.push({ ID_producto: parseInt(id), cantidad, precio_venta });
+    });
+
+    // desde filas de select creadas con agregarProductoVenta
+    const filasSelect = Array.from(document.querySelectorAll('.producto-select-row'));
+    filasSelect.forEach(row => {
+      const sel = row.querySelector('.producto-select');
+      const qty = row.querySelector('.producto-cantidad');
+      if (!sel || !sel.value) return; // no seleccionado
+      const id = sel.value;
+      const precio_venta = parseFloat(sel.options[sel.selectedIndex]?.dataset?.precio) || 0;
+      const cantidad = qty ? parseInt(qty.value) || 1 : 1;
+      productos.push({ ID_producto: parseInt(id), cantidad, precio_venta });
+    });
+
+    if (productos.length === 0) {
       alert('Selecciona al menos un producto');
       return;
     }
-
-    const productos = productosChecked.map(chk => {
-      const id = chk.dataset.id;
-      const cantidad = parseInt(document.querySelector(`.producto-cantidad[data-id="${id}"]`).value) || 1;
-      const precio_venta = parseFloat(chk.dataset.precio);
-      return { ID_producto: parseInt(id), cantidad, precio_venta };
-    });
 
     const payload = { ID_usuario: parseInt(ID_usuario), ID_cliente: ID_cliente ? parseInt(ID_cliente) : null, productos };
 
@@ -1155,7 +1357,17 @@
       if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
       alert(`✅ Venta registrada.\nID: ${data.ID_venta}\nTotal: $${data.total}`);
+      // limpiar formulario y elementos dinámicos
       e.target.reset();
+      // remover filas de selects agregadas manualmente
+      document.querySelectorAll('.producto-select-row').forEach(r => r.remove());
+      // desmarcar checkboxes de productos y resetear cantidades
+      document.querySelectorAll('.producto-checkbox').forEach(chk => {
+        chk.checked = false;
+        const id = chk.dataset.id;
+        const q = document.querySelector(`.producto-cantidad[data-id="${id}"]`);
+        if (q) q.value = 1;
+      });
       cargarVentas();
     } catch (error) {
       alert('❌ Error al registrar venta: ' + error.message);

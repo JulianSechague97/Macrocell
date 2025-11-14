@@ -157,6 +157,7 @@
     <div class="icons">
         <a href="pedidos.html" class="icon">Pedidos</a>
         <a href="login.html" class="icon">👤</a>
+        <button id="btnSolicitarServicio" style="margin-left:8px;padding:6px 10px;border-radius:8px;border:none;background:#28a745;color:white;cursor:pointer">Solicitar servicio</button>
         <a href="carrito.html" class="icon">🛒 <span id="carrito-count">0</span></a>
     </div>
 </header>
@@ -290,6 +291,29 @@
     </section>
 </main>
 
+<!-- MODAL SOLICITAR SERVICIO (CLIENTE) -->
+<div id="modalSolicitar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;padding:20px;z-index:9999">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:520px;width:100%">
+        <h3>Solicitar servicio técnico</h3>
+        <p class="small">Completa los datos y te contactaremos.</p>
+        <form id="formSolicitar">
+            <label>Nombre</label>
+            <input id="solNombre" type="text" required style="width:100%;padding:8px;margin-bottom:8px" />
+            <label>Correo</label>
+            <input id="solCorreo" type="email" style="width:100%;padding:8px;margin-bottom:8px" />
+            <label>Teléfono</label>
+            <input id="solTelefono" type="text" style="width:100%;padding:8px;margin-bottom:8px" />
+            <label>Descripción de la falla</label>
+            <textarea id="solDescripcion" required style="width:100%;padding:8px;margin-bottom:8px"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button type="button" id="closeSolicitar" style="padding:8px 12px;border-radius:8px;border:1px solid #ccc;background:#fff">Cancelar</button>
+                <button type="submit" style="padding:8px 12px;border-radius:8px;border:none;background:#007bff;color:white">Enviar solicitud</button>
+            </div>
+            <div id="solMsg" style="margin-top:8px;color:#666"></div>
+        </form>
+    </div>
+</div>
+
 <!-- ============================================
      FOOTER
      ============================================ -->
@@ -391,18 +415,55 @@ const productoEncontrado = productos.find(p => {
   mensaje.style.cssText =
     "position:fixed;bottom:30px;right:30px;background:#28a745;color:white;padding:12px 18px;border-radius:10px;font-size:16px;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:9999;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;transform:translateY(20px)";
   document.body.appendChild(mensaje);
-  setTimeout(() => {
-    mensaje.style.opacity = "1";
-    mensaje.style.transform = "translateY(0)";
-  }, 50);
-  setTimeout(() => {
-    mensaje.style.opacity = "0";
-    mensaje.style.transform = "translateY(20px)";
-    setTimeout(() => mensaje.remove(), 300);
-  }, 1500);
+    setTimeout(() => {
+        mensaje.style.opacity = "1";
+        mensaje.style.transform = "translateY(0)";
+    }, 50);
+
+    setTimeout(() => {
+        mensaje.style.opacity = "0";
+        mensaje.style.transform = "translateY(20px)";
+    }, 1800);
+
+    // quitar mensaje después de la animación
+    setTimeout(() => mensaje.remove(), 2100);
+
 }
 
+// ================= Solicitar servicio (cliente) =================
+const btnSolicitarServicio = document.getElementById('btnSolicitarServicio');
+const modalSolicitar = document.getElementById('modalSolicitar');
+const closeSolicitar = document.getElementById('closeSolicitar');
+const formSolicitar = document.getElementById('formSolicitar');
+const solMsg = document.getElementById('solMsg');
 
+btnSolicitarServicio.addEventListener('click', ()=> modalSolicitar.style.display='flex');
+closeSolicitar.addEventListener('click', ()=> { modalSolicitar.style.display='none'; solMsg.textContent=''; formSolicitar.reset(); });
+
+formSolicitar.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const Nombre = document.getElementById('solNombre').value.trim();
+    const Correo = document.getElementById('solCorreo').value.trim();
+    const Telefono = document.getElementById('solTelefono').value.trim();
+    const Descripcion = document.getElementById('solDescripcion').value.trim();
+    if(!Nombre || !Descripcion){ solMsg.textContent = 'Completa nombre y descripción'; return; }
+
+    try{
+        // Crear cliente (podría ya existir) y obtener insertId
+        const resCliente = await fetch(`${API_URL}/api/clientes`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ Nombre, Telefono, Correo }) });
+        const dataCliente = await resCliente.json().catch(()=>({}));
+        const id_cliente = dataCliente.insertId || null;
+
+        // Crear servicio asociado
+        const payload = { ID_usuario: null, ID_cliente: id_cliente, Descripcion_falla: Descripcion, Fecha_entrega: null, Estado_servicio: 'Pendiente', Costo: 0 };
+        const resServ = await fetch(`${API_URL}/api/servicios`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(!resServ.ok){ const err = await resServ.json().catch(()=>({})); solMsg.textContent = err.error || 'Error al solicitar servicio'; return; }
+        solMsg.textContent = 'Solicitud enviada correctamente. Nos contactaremos pronto.';
+        setTimeout(()=>{ modalSolicitar.style.display='none'; formSolicitar.reset(); solMsg.textContent=''; }, 1500);
+    }catch(err){
+        console.error(err); solMsg.textContent = 'Error de conexión';
+    }
+});
 // SISTEMA DE NAVEGACIÓN ENTRE SECCIONES
 const btnServicios = document.getElementById('btnServicios');
 const seccionServicios = document.getElementById('seccionServicios');

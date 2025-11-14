@@ -206,6 +206,8 @@
   </div>
 </div>
 
+  
+<script src="config.js"></script>
 <script>
 /* ========== CONFIG ========== */
 const API_BASE = `${API_URL}`; // cambia si tu servidor corre en otra url/puerto
@@ -225,6 +227,25 @@ function toast(msg, type="info"){
 let servicios = []; // cache local
 let seleccionado = null;
 let empleadoLogueado = null;
+
+// Intenta recuperar usuario logueado desde localStorage (si vino de la página de login)
+try{
+  const stored = localStorage.getItem('usuarioActivo');
+  if(stored){
+    empleadoLogueado = JSON.parse(stored);
+    // actualizar UI básica
+    if(empleadoLogueado && empleadoLogueado.Nombre){
+      btnOpenLogin.textContent = empleadoLogueado.Nombre.split(' ')[0];
+      logoutBtn.style.display = 'inline-block';
+    }
+  }
+}catch(e){ console.warn('No se pudo leer usuarioActivo de localStorage', e); }
+
+// Helper para obtener el id del empleado (soporta distintos nombres de campo)
+function obtenerIdEmpleado(){
+  if(!empleadoLogueado) return null;
+  return empleadoLogueado.ID_usuario || empleadoLogueado.id_usuario || empleadoLogueado.ID || empleadoLogueado.id || null;
+}
 
 /* ========== SELECTORES ========== */
 const listaServiciosEl = document.getElementById('listaServicios');
@@ -313,16 +334,15 @@ async function consultarServicio(id){
 
 /* crear cliente si es nuevo */
 async function crearClienteSiEsNuevo(cedula, nombre){
-  if(!cedula || !nombre) return null;
+  if(!nombre) return null; // nombre es lo esencial
   try{
-    // POST /api/clientes  -> { Cedula, Nombre, Correo?, Telefono?, Direccion? }
-    const payload = { Cedula: cedula, Nombre: nombre };
+    // POST /api/clientes -> { Nombre, Telefono?, Correo? }
+    const payload = { Nombre: nombre, Telefono: null, Correo: null };
     const res = await fetch(`${API_BASE}/api/clientes`, {
       method:'POST', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
     });
     if(!res.ok){
       const data = await res.json().catch(()=>({})); console.log(data);
-      // si ya existe quizá el backend devuelva error; ignoramos y retornamos null
       return null;
     }
     const created = await res.json();
@@ -348,11 +368,9 @@ formServicio.addEventListener('submit', async (e) => {
   try{
     // Si el cliente no existe, intentamos crear (esto requiere que el backend tenga POST /api/clientes)
     let id_cliente = null;
-    if(clienteCedula && clienteNombre){
-      // llamar endpoint que crea cliente
-      await crearClienteSiEsNuevo(clienteCedula, clienteNombre)
-      // NOTA: en este ejemplo asumimos que el backend guardará el cliente y le asignará un ID; 
-      // si tu endpoint devuelve el id, podrías usarlo aquí para asociar al servicio.
+    if(clienteNombre){
+      // llamar endpoint que crea cliente y devuelve insertId
+      id_cliente = await crearClienteSiEsNuevo(clienteCedula, clienteNombre);
     }
 
     // Si seleccionado => actualizar
@@ -369,11 +387,15 @@ formServicio.addEventListener('submit', async (e) => {
       const res = await fetch(`${API_BASE}/api/servicios/${id}`, {
         method:'PUT', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error("Error actualizando");
+      if(!res.ok) {
+        const errBody = await res.json().catch(()=>({ message: 'Error desconocido' }));
+        throw new Error(errBody.error || errBody.message || 'Error actualizando');
+      }
       toast("Servicio actualizado", "success");
     } else {
       // crear nuevo servicio
       const payload = {
+        ID_usuario: obtenerIdEmpleado(),
         ID_cliente: id_cliente || null,
         Descripcion_falla: descripcion,
         Fecha_ingreso: fechaIngreso || new Date().toISOString().slice(0,10),
@@ -384,8 +406,12 @@ formServicio.addEventListener('submit', async (e) => {
       const res = await fetch(`${API_BASE}/api/servicios`, {
         method:'POST', headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error("Error guardando servicio");
-      toast("Servicio creado", "success");
+      if(!res.ok) {
+        const errBody = await res.json().catch(()=>({ message: 'Error desconocido' }));
+        throw new Error(errBody.error || errBody.message || 'Error guardando servicio');
+      }
+      const created = await res.json().catch(()=>({}));
+      toast("Servicio creado (ID: " + (created.ID_servicio || created.insertId || '-') + ")", "success");
     }
 
     // limpiar y recargar
@@ -459,6 +485,8 @@ formLogin.addEventListener('submit', async (e) => {
     const data = await res.json();
     if(res.ok && data.success){
       empleadoLogueado = data.usuario || { correo };
+      // Guardar usuario en localStorage para persistir sesión entre páginas
+      try{ localStorage.setItem('usuarioActivo', JSON.stringify(empleadoLogueado)); }catch(err){ console.warn('No se pudo guardar usuarioActivo', err); }
       loginMsg.textContent = "Sesión iniciada";
       logoutBtn.style.display = 'inline-block';
       btnOpenLogin.textContent = (empleadoLogueado.Nombre ? empleadoLogueado.Nombre.split(' ')[0] : 'Empleado');
@@ -479,8 +507,11 @@ logoutBtn.addEventListener('click', ()=> {
   empleadoLogueado = null;
   btnOpenLogin.textContent = 'Iniciar sesión';
   logoutBtn.style.display = 'none';
+  try{ localStorage.removeItem('usuarioActivo'); }catch(e){}
   toast("Sesión cerrada");
 });
+
+
 
 /* ========== EVENTOS UI ========== */
 btnNuevoServicio.addEventListener('click', ()=> {
@@ -515,6 +546,5 @@ window.addEventListener('load', async ()=>{
   await listarServicios();
 });
 </script>
-<script src="config.js"></script>
 </body>
 </html>
